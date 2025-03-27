@@ -13,7 +13,7 @@ export default function MyApp() {
       <Paper />
       <Paper elevation={3} />
       <div>
-        <h1>Welcome to my app</h1>
+        <h1>Welcome to my app!!</h1>
         <MyButton title="I'm a button" />
       </div>
     </Grid>
