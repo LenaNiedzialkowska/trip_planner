@@ -1,23 +1,20 @@
-DROP TABLE IF EXISTS trips;
-
-DROP TABLE IF EXISTS users;
-
-DROP TABLE IF EXISTS daily_plans;
-
-DROP TABLE IF EXISTS events;
-
-DROP TABLE IF EXISTS expenses;
-
-DROP TABLE IF EXISTS packing_lists;
-
 DROP TABLE IF EXISTS packing_items;
 
 DROP TABLE IF EXISTS item_category;
 
+DROP TABLE IF EXISTS packing_lists;
+
+DROP TABLE IF EXISTS expenses;
+
 DROP TABLE IF EXISTS expenses_category;
 
-ALTER TABLE trips
-DROP FOREIGN KEY user_id;
+DROP TABLE IF EXISTS events;
+
+DROP TABLE IF EXISTS daily_plans;
+
+DROP TABLE IF EXISTS trips;
+
+DROP TABLE IF EXISTS users;
 
 CREATE TABLE
     users (
@@ -25,8 +22,7 @@ CREATE TABLE
         username VARCHAR(255),
         email VARCHAR(255),
         password VARCHAR(255),
-        created_at TIMESTAMP,
-        description VARCHAR(255)
+        created_at TIMESTAMP
     );
 
 CREATE TABLE
@@ -34,7 +30,6 @@ CREATE TABLE
         id SERIAL PRIMARY KEY,
         name VARCHAR(255),
         number_of_destinations INT,
-        password VARCHAR(255),
         start_date TIMESTAMP,
         end_date TIMESTAMP,
         cost FLOAT,
@@ -118,3 +113,44 @@ CREATE TABLE
         FOREIGN KEY (item_category_id) REFERENCES item_category (id),
         created_at timestamp
     );
+
+INSERT INTO
+    users (username, email, password, created_at)
+VALUES
+    ('janek', 'janek@example.com', 'haslo123', NOW ()),
+    ('kasia', 'kasia@example.com', 'haslo456', NOW ());
+
+INSERT INTO
+    trips (
+        name,
+        number_of_destinations,
+        start_date,
+        end_date,
+        cost,
+        user_id,
+        created_at
+    )
+VALUES
+    (
+        'Wakacje w Grecji',
+        3,
+        '2025-06-01',
+        '2025-06-15',
+        3000.50,
+        1,
+        NOW ()
+    ),
+    (
+        'Weekend w Paryżu',
+        1,
+        '2025-05-01',
+        '2025-05-03',
+        800.00,
+        1,
+        NOW ()
+    );
+
+SELECT
+    *
+FROM
+    users;

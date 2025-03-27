@@ -1,7 +1,7 @@
 const express = require("express");
 const app = express();
 const cors = require("cors");
-const pool = require("./db")
+const pool = require("./db");
 
 //middleware
 app.use(cors());
@@ -9,25 +9,69 @@ app.use(express.json()); //req.body
 
 //ROUTES//
 
-//create a trip
+//create a user
+app.post("/users", async (req, res) => {
+  try {
+    const { username, email, password, created_at } = req.body;
+    const newUser = await pool.query(
+      "INSERT INTO users (username, email, password, created_at) VALUES($1, $2, $3, $4) RETURNING *",
+      [username, email, password, created_at]
+    );
+    res.json(newUser.rows[0]);
+    // console.log(req.body);
+  } catch (error) {
+    console.log(error.message);
+  }
+});
 
-app.post("/trips", async(req, res) => {
-    try {
-        const {description} = req.body;
-        const newTrip = await pool.query("INSERT INTO trip (description) VALUES($1)", [description]);
-        res.json(newTrip)
-        // console.log(req.body);
-    } catch (error) {
-        console.log(error.message);
-    }
-})
+//get all users
+app.get("/users", async (req, res) => {
+  try {
+    const allUsers = await pool.query("SELECT * FROM users");
+    res.json(allUsers.rows);
+  } catch (error) {
+    console.log(error.message);
+  }
+});
 
-//get all trips
+//get a user
+app.get("/users/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = await pool.query("SELECT * FROM users WHERE id = $1", [id]);
+    res.json(user.rows[0]);
+    // console.log(req.params);
+  } catch (error) {
+    console.log(error.message);
+  }
+});
 
-//get a trip
+//update a user
+app.put("/users/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { username, email, password, created_at } = req.body;
+    const updateUser = await pool.query(
+      "UPDATE users SET username = $1, email = $2, password=$3, created_at=$4 WHERE id=$5",
+      [username, email, password, created_at, id]
+    );
+  } catch (error) {
+    console.log(error.message);
+  }
+  res.json("Users were updated!");
+});
 
-//update a trip
+//delete a user
+app.delete("/users/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const deleteUser = await pool.query("DELETE FROM users WHERE id=$1", [id]);
+  } catch (error) {
+    console.log(error.message);
+  }
+  res.json("User was deleted!");
+});
 
-app.listen(5000, () =>{
-    console.log("server has started on port 5000")
+app.listen(5000, () => {
+  console.log("server has started on port 5000");
 });
