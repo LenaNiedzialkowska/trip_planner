@@ -53,7 +53,7 @@ CREATE TABLE
         id SERIAL PRIMARY KEY,
         name VARCHAR(255),
         time time,
-        desription VARCHAR(255),
+        description VARCHAR(255),
         cost float,
         daily_plan_id integer not null,
         FOREIGN KEY (daily_plan_id) REFERENCES daily_plans (id),
@@ -113,6 +113,8 @@ CREATE TABLE
         FOREIGN KEY (item_category_id) REFERENCES item_category (id),
         created_at timestamp
     );
+
+ADD CONSTRAINT unique_list UNIQUE (trip_id);
 
 INSERT INTO
     users (username, email, password, created_at)
