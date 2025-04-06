@@ -15,17 +15,15 @@ import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import ChecklistIcon from "@mui/icons-material/Checklist";
 import PackingList from "../packingList/packingList.tsx";
+import ResponsiveAppBar from "./appBar.tsx";
+import CategoryList from "../packingList/categoryList.tsx";
 
 const drawerWidth = 240;
 
 export default function ClippedDrawer() {
   const [selectedTab, setSelectedTab] = React.useState("Plan");
 
-  const tabs = {
-    // Plan: <PlanComponent />,
-    // Budget: <BudgetComponent />,
-    Packing: <PackingList />,
-  };
+  const tabs = ["Plan", "Budget", "Packing"];
   return (
     <Box sx={{ display: "flex" }}>
       <CssBaseline />
@@ -33,11 +31,12 @@ export default function ClippedDrawer() {
         position="fixed"
         sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}
       >
-        <Toolbar>
+        {/* <Toolbar>
           <Typography variant="h6" noWrap component="div">
             Clipped drawer
           </Typography>
-        </Toolbar>
+        </Toolbar> */}
+        <ResponsiveAppBar />
       </AppBar>
       <Drawer
         variant="permanent"
@@ -74,7 +73,12 @@ export default function ClippedDrawer() {
       </Drawer>
       <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
         <Toolbar />
-        {tabs[selectedTab]}
+        {selectedTab === "Plan" && (
+          <div className="grid grid-cols-2">
+            <CategoryList />
+            <PackingList />
+          </div>
+        )}
       </Box>
     </Box>
   );

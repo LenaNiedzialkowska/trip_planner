@@ -86,7 +86,6 @@ CREATE TABLE
 CREATE TABLE
     packing_lists (
         id SERIAL PRIMARY KEY,
-        category VARCHAR(255),
         trip_id integer not null,
         FOREIGN KEY (trip_id) REFERENCES trips (id),
         created_at timestamp
@@ -97,7 +96,6 @@ CREATE TABLE
         id SERIAL PRIMARY KEY,
         name VARCHAR(255),
         packing_list_id integer not null,
-        FOREIGN KEY (packing_list_id) REFERENCES packing_lists (id),
         created_at timestamp
     );
 
@@ -114,8 +112,6 @@ CREATE TABLE
         created_at timestamp
     );
 
-ADD CONSTRAINT unique_list UNIQUE (trip_id);
-
 INSERT INTO
     users (username, email, password, created_at)
 VALUES
@@ -124,6 +120,7 @@ VALUES
 
 INSERT INTO
     trips (
+        id,
         name,
         number_of_destinations,
         start_date,
@@ -134,6 +131,7 @@ INSERT INTO
     )
 VALUES
     (
+        1,
         'Wakacje w Grecji',
         3,
         '2025-06-01',
@@ -143,6 +141,7 @@ VALUES
         NOW ()
     ),
     (
+        2,
         'Weekend w Paryżu',
         1,
         '2025-05-01',
@@ -151,6 +150,35 @@ VALUES
         1,
         NOW ()
     );
+
+INSERT INTO
+    packing_lists (id, trip_id)
+VALUES
+    (1, 1);
+
+INSERT INTO
+    item_category (id, name, created_at)
+VALUES
+    (1, 'Ubrania', NOW ()),
+    (2, 'Kosmetyki', NOW ()),
+    (3, 'Elektronika', NOW ());
+
+INSERT INTO
+    packing_items (
+        name,
+        quantity,
+        packed,
+        packing_list_id,
+        item_category_id,
+        created_at
+    )
+VALUES
+    ('T-shirty', 5, 'nie', 1, 1, NOW ()),
+    ('Spodnie', 2, 'tak', 1, 1, NOW ()),
+    ('Szczoteczka do zębów', 1, 'tak', 1, 2, NOW ()),
+    ('Szampon', 1, 'nie', 1, 2, NOW ()),
+    ('Ładowarka do telefonu', 1, 'tak', 1, 3, NOW ()),
+    ('Powerbank', 1, 'nie', 1, 3, NOW ());
 
 SELECT
     *

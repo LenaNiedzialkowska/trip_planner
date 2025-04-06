@@ -64,6 +64,7 @@ router.delete("/packing_lists", async (req, res) => {
   }
 });
 
+//packing_items
 //Add item to packing list
 router.post("/packing_items", async (req, res) => {
   try {
@@ -95,15 +96,15 @@ router.get("/packing_items/:packing_list_id", async (req, res) => {
   }
 });
 
-//change packing status of item
+//edit item
 router.put("/packing_items/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const { packed } = req.body;
-    await pool.query("UPDATE packing_items SET packed = $1 WHERE id = $2", [
-      packed,
-      id,
-    ]);
+    const { packed, quantity } = req.body;
+    await pool.query(
+      "UPDATE packing_items SET packed = $1, quantity = $2 WHERE id = $3",
+      [packed, quantity, id]
+    );
     res.json({ message: "Item status updated" });
   } catch (error) {
     console.error(error.message);
@@ -123,4 +124,57 @@ router.delete("/packing_items/:id", async (req, res) => {
   }
 });
 
+//item_category
+//Add category to item_category
+router.post("/item_category", async (req, res) => {
+  try {
+    const { name } = req.body;
+    const newCategory = await pool.query(
+      "INSERT INTO packing_items (name, created_at) VALUES($1, NOW()) RETURNING *",
+      [name]
+    );
+    res.status(201).json(newCategory.rows[0]);
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+//Get all categories from item_category
+router.get("/item_category", async (req, res) => {
+  try {
+    const itemCategory = await pool.query("SELECT * FROM item_category");
+    res.json(itemCategory.rows);
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+//Get a category from item_category
+router.get("/item_category/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const itemCategory = await pool.query(
+      "SELECT * FROM item_category WHERE id = $1",
+      [id]
+    );
+    res.json(itemCategory.rows);
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+//delete an item_category
+router.delete("/item_category/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    await pool.query("DELETE FROM item_category WHERE id=$1", [id]);
+    res.json({ message: "Category of item was deleted!" });
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
 module.exports = router;

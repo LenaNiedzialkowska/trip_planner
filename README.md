@@ -5,3 +5,11 @@ Uruchamianie postgres na docker
 Uruchamianie skryptu bazy danych:
 
 `docker exec -it postgres psql -U postgres -d trip_planner -f /app/create_tables.sql`
+
+Uruchamianie backendu:
+
+`npm run serve `
+
+Uruchamianie frontendu:
+
+`npm run start`
