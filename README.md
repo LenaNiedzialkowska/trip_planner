@@ -8,7 +8,7 @@ Uruchamianie skryptu bazy danych:
 
 Uruchamianie backendu:
 
-`npm run serve `
+`nodemon index.js`
 
 Uruchamianie frontendu:
 
