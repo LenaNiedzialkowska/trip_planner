@@ -5,7 +5,7 @@ const pool = require("../db");
 //create a packing list
 router.post("/packing_lists", async (req, res) => {
   try {
-    const { category, trip_id } = req.body;
+    const { trip_id } = req.body;
     const existingList = await pool.query(
       "SELECT * FROM packing_lists WHERE trip_id = $1",
       [trip_id]
@@ -16,8 +16,8 @@ router.post("/packing_lists", async (req, res) => {
         .json({ error: "There is existing list for this trip" });
     }
     const newList = await pool.query(
-      "INSERT INTO packing_lists (category, trip_id, created_at) VALUES($1, $2, NOW()) RETURNING *",
-      [category, trip_id]
+      "INSERT INTO packing_lists (trip_id, created_at) VALUES($1, NOW()) RETURNING *",
+      [trip_id]
     );
     res.status(201).json(newList.rows[0]);
     // console.log(req.body);
@@ -65,14 +65,13 @@ router.delete("/packing_lists", async (req, res) => {
 });
 
 //packing_items
-//Add item to packing list
+//Add item to packing_items
 router.post("/packing_items", async (req, res) => {
   try {
-    const { name, quantity, packed, packing_list_id, item_category_id } =
-      req.body;
+    const { name, quantity, packed, item_category_id } = req.body;
     const newItem = await pool.query(
-      "INSERT INTO packing_items (name, quantity, packed, packing_list_id, item_category_id, created_at) VALUES($1, $2, $3, $4, $5, NOW()) RETURNING *",
-      [name, quantity, packed, packing_list_id, item_category_id]
+      "INSERT INTO packing_items (name, quantity, packed, item_category_id, created_at) VALUES($1, $2, $3, $4, NOW()) RETURNING *",
+      [name, quantity, packed, item_category_id]
     );
     res.status(201).json(newItem.rows[0]);
   } catch (error) {
@@ -81,15 +80,30 @@ router.post("/packing_items", async (req, res) => {
   }
 });
 
-//Get all items from list
-router.get("/packing_items/:packing_list_id", async (req, res) => {
+//Get all items from category
+router.get("/packing_items/:item_category_id", async (req, res) => {
   try {
-    const { packing_list_id } = req.params;
+    const { item_category_id } = req.params;
     const packingItems = await pool.query(
-      "SELECT * FROM packing_items WHERE packing_list_id = $1",
-      [packing_list_id]
+      "SELECT * FROM packing_items WHERE item_category_id = $1",
+      [item_category_id]
     );
     res.json(packingItems.rows);
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+//Get number of all items from category
+router.get("/packing_items/:item_category_id/count", async (req, res) => {
+  try {
+    const { item_category_id } = req.params;
+    const packingItems = await pool.query(
+      "SELECT COUNT (*) FROM packing_items WHERE item_category_id = $1",
+      [item_category_id]
+    );
+    res.json({ count: parseInt(packingItems.rows[0].count, 10) });
   } catch (error) {
     console.error(error.message);
     res.status(500).json({ error: "Internal server error" });
@@ -128,10 +142,10 @@ router.delete("/packing_items/:id", async (req, res) => {
 //Add category to item_category
 router.post("/item_category", async (req, res) => {
   try {
-    const { name } = req.body;
+    const { name, packing_list_id } = req.body;
     const newCategory = await pool.query(
-      "INSERT INTO packing_items (name, created_at) VALUES($1, NOW()) RETURNING *",
-      [name]
+      "INSERT INTO item_category (name, packing_list_id,created_at) VALUES($1, $2, NOW()) RETURNING *",
+      [name, packing_list_id]
     );
     res.status(201).json(newCategory.rows[0]);
   } catch (error) {
@@ -144,6 +158,21 @@ router.post("/item_category", async (req, res) => {
 router.get("/item_category", async (req, res) => {
   try {
     const itemCategory = await pool.query("SELECT * FROM item_category");
+    res.json(itemCategory.rows);
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+//Get categories for trip
+router.get("/item_category/:packing_list_id", async (req, res) => {
+  try {
+    const { packing_list_id } = req.params;
+    const itemCategory = await pool.query(
+      "SELECT * FROM item_category WHERE packing_list_id=$1",
+      [packing_list_id]
+    );
     res.json(itemCategory.rows);
   } catch (error) {
     console.error(error.message);

@@ -11,7 +11,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import RemoveIcon from "@mui/icons-material/Remove";
 import AddIcon from "@mui/icons-material/Add";
 import AddItemInput from "./addItemInput.tsx";
-import { Grid } from "@mui/material";
+import { Grid, Typography } from "@mui/material";
 
 interface PackingItem {
   id: number;
@@ -19,10 +19,13 @@ interface PackingItem {
   quantity: number;
   packed: string;
   packing_list_id: number;
+}
+
+interface Props {
   item_category_id: number;
 }
 
-export default function CheckboxList() {
+export default function CheckboxList({ item_category_id }: Props) {
   const [checked, setChecked] = React.useState([0]);
   const [items, setItems] = React.useState<PackingItem[]>([]);
   const [refreshFlag, setRefreshFlag] = React.useState<boolean>(false);
@@ -108,11 +111,9 @@ export default function CheckboxList() {
   };
 
   const getItems = async () => {
-    //TODO - zmienić na wlasciwe id wycieczki
-    const id = 1;
     try {
       const response = await fetch(
-        `http://localhost:5000/api/packing_items/${id}`
+        `http://localhost:5000/api/packing_items/${item_category_id}`
       );
       const jsonData: PackingItem[] = await response.json();
       console.log(jsonData);
@@ -122,48 +123,64 @@ export default function CheckboxList() {
     }
   };
   React.useEffect(() => {
-    getItems();
-    setRefreshFlag(false);
-  }, [refreshFlag]);
+    if (item_category_id) {
+      getItems();
+      setRefreshFlag(false);
+    }
+  }, [refreshFlag, item_category_id]);
 
   return (
-    <List sx={{ width: "100%", maxWidth: 360, bgcolor: "background.paper" }}>
-      <AddItemInput setRefreshFlag={setRefreshFlag} />
-      {items?.map((value) => {
-        const labelId = `checkbox-list-label-${value}`;
+    <div className="h-[100%] w-[80%]">
+      {/* <Typography variant="h6">{value.name}</Typography> */}
+      <List
+        sx={{
+          width: "100%",
+          maxWidth: 360,
+          bgcolor: "background.paper",
+          height: "70vh",
+          overflow: "auto",
+        }}
+      >
+        {items?.map((value) => {
+          const labelId = `checkbox-list-label-${value}`;
 
-        return (
-          <ListItem
-            key={value.id}
-            secondaryAction={
-              <IconButton edge="end" aria-label="comments">
-                <RemoveIcon onClick={() => substractItem(value)} />
-                {/* {value.quantity} */} {value.quantity}
-                <AddIcon onClick={() => addItem(value)} />
-                <DeleteIcon onClick={() => deleteItem(value)} />
-              </IconButton>
-            }
-            disablePadding
-          >
-            <ListItemButton
-              role={undefined}
-              onClick={handleToggle(value.id)}
-              dense
+          return (
+            <ListItem
+              key={value.id}
+              secondaryAction={
+                <IconButton edge="end" aria-label="comments">
+                  <RemoveIcon onClick={() => substractItem(value)} />
+                  {/* {value.quantity} */} {value.quantity}
+                  <AddIcon onClick={() => addItem(value)} />
+                  <DeleteIcon onClick={() => deleteItem(value)} />
+                </IconButton>
+              }
+              disablePadding
             >
-              <ListItemIcon>
-                <Checkbox
-                  edge="start"
-                  checked={checked.includes(value.id)}
-                  tabIndex={-1}
-                  disableRipple
-                  inputProps={{ "aria-labelledby": labelId }}
-                />
-              </ListItemIcon>
-              <ListItemText id={labelId} primary={`${value.name}`} />
-            </ListItemButton>
-          </ListItem>
-        );
-      })}
-    </List>
+              <ListItemButton
+                role={undefined}
+                onClick={handleToggle(value.id)}
+                dense
+              >
+                <ListItemIcon>
+                  <Checkbox
+                    edge="start"
+                    checked={checked.includes(value.id)}
+                    tabIndex={-1}
+                    disableRipple
+                    inputProps={{ "aria-labelledby": labelId }}
+                  />
+                </ListItemIcon>
+                <ListItemText id={labelId} primary={`${value.name}`} />
+              </ListItemButton>
+            </ListItem>
+          );
+        })}
+      </List>
+      <AddItemInput
+        setRefreshFlag={setRefreshFlag}
+        item_category_id={item_category_id}
+      />
+    </div>
   );
 }

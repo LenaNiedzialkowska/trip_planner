@@ -1,4 +1,4 @@
-import * as React from "react";
+import React from "react";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
 import ListItemButton from "@mui/material/ListItemButton";
@@ -11,22 +11,34 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import RemoveIcon from "@mui/icons-material/Remove";
 import AddIcon from "@mui/icons-material/Add";
 import AddItemInput from "./addItemInput.tsx";
+import AddCategory from "./addCategory.tsx";
 import { Typography, Grid } from "@mui/material";
 
-interface PackingItem {
+interface Category {
   id: number;
   name: string;
-  quantity: number;
-  packed: string;
   packing_list_id: number;
-  item_category_id: number;
+  created_at: string;
+  itemCount: number;
 }
 
-export default function CategoryList() {
-  const [checked, setChecked] = React.useState([0]);
-  const [items, setItems] = React.useState<PackingItem[]>([]);
-  const [refreshFlag, setRefreshFlag] = React.useState<boolean>(false);
+interface Props {
+  selectedCategoryId: number | null;
+  setSelectedCategoryId: (id: number) => void;
+  trip_id: number;
+}
 
+export default function CategoryList({
+  selectedCategoryId,
+  setSelectedCategoryId,
+  trip_id,
+}: Props) {
+  const [checked, setChecked] = React.useState([0]);
+  const [categories, setCategories] = React.useState<Category[]>([]);
+  const [refreshFlag, setRefreshFlag] = React.useState<boolean>(false);
+  const [packingId, setPackingId] = React.useState<number>(1);
+  // const [selectedCategory, setSelectedCategory] =
+  //   React.useState<string>("Ubrania");
   const handleToggle = (value: number) => () => {
     const currentIndex = checked.indexOf(value);
     const newChecked = [...checked];
@@ -40,113 +52,173 @@ export default function CategoryList() {
     setChecked(newChecked);
   };
 
-  const updateQuantity = async (item: PackingItem, newQuantity: number) => {
+  // const updateQuantity = async (item: PackingItem, newQuantity: number) => {
+  //   try {
+  //     const response = await fetch(
+  //       `http://localhost:5000/api/packing_items/${item.id}`,
+  //       {
+  //         method: "PUT",
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //         },
+  //         body: JSON.stringify({ quantity: newQuantity }),
+  //       }
+  //     );
+  //     if (!response.ok) {
+  //       throw new Error("Failed to change quantity");
+  //     }
+  //   } catch (error) {
+  //     console.error(error.message);
+  //   }
+  // };
+
+  // const deleteItem = async (item: PackingItem) => {
+  //   try {
+  //     const response = await fetch(
+  //       `http://localhost:5000/api/packing_items/${item.id}`,
+  //       {
+  //         method: "DELETE",
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //         },
+  //         // body: JSON.stringify({}),
+  //       }
+  //     );
+  //     setRefreshFlag(true);
+  //     if (!response.ok) {
+  //       throw new Error("Failed to delete item");
+  //     }
+  //   } catch (error) {
+  //     console.error(error.message);
+  //   }
+  // };
+
+  // const addItem = (item: PackingItem) => {
+  //   console.log(`adding ${item.quantity}`);
+  //   const newQuantity = item.quantity + 1;
+  //   updateQuantity(item, newQuantity);
+  //   setItems((prevItems) =>
+  //     prevItems.map((prevItem) =>
+  //       prevItem.id === item.id
+  //         ? { ...prevItem, quantity: newQuantity }
+  //         : prevItem
+  //     )
+  //   );
+  // };
+
+  // const substractItem = (item: PackingItem) => {
+  //   console.log(`substracting ${item.quantity}`);
+  //   let newQuantity = item.quantity - 1 <= 1 ? 1 : item.quantity - 1;
+  //   updateQuantity(item, newQuantity);
+  //   setItems((prevItems) =>
+  //     prevItems.map((prevItem) =>
+  //       prevItem.id === item.id
+  //         ? { ...prevItem, quantity: newQuantity }
+  //         : prevItem
+  //     )
+  //   );
+  // };
+
+  const truncateText = (text: string, length: number) => {
+    if (text.length >= length) {
+      text = text.substring(0, length);
+      text += "...";
+    }
+    return text;
+  };
+
+  const getPackingId = async (trip_id: number) => {
     try {
       const response = await fetch(
-        `http://localhost:5000/api/packing_items/${item.id}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ quantity: newQuantity }),
-        }
+        `http://localhost:5000/api/packing_list/${trip_id}`
       );
-      if (!response.ok) {
-        throw new Error("Failed to change quantity");
-      }
+      const jsonData = await response.json();
+      setPackingId(jsonData);
     } catch (error) {
       console.error(error.message);
     }
-  };
-
-  const deleteItem = async (item: PackingItem) => {
-    try {
-      const response = await fetch(
-        `http://localhost:5000/api/packing_items/${item.id}`,
-        {
-          method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          // body: JSON.stringify({}),
-        }
-      );
-      setRefreshFlag(true);
-      if (!response.ok) {
-        throw new Error("Failed to delete item");
-      }
-    } catch (error) {
-      console.error(error.message);
-    }
-  };
-
-  const addItem = (item: PackingItem) => {
-    console.log(`adding ${item.quantity}`);
-    const newQuantity = item.quantity + 1;
-    updateQuantity(item, newQuantity);
-    setItems((prevItems) =>
-      prevItems.map((prevItem) =>
-        prevItem.id === item.id
-          ? { ...prevItem, quantity: newQuantity }
-          : prevItem
-      )
-    );
-  };
-
-  const substractItem = (item: PackingItem) => {
-    console.log(`substracting ${item.quantity}`);
-    let newQuantity = item.quantity - 1 <= 1 ? 1 : item.quantity - 1;
-    updateQuantity(item, newQuantity);
-    setItems((prevItems) =>
-      prevItems.map((prevItem) =>
-        prevItem.id === item.id
-          ? { ...prevItem, quantity: newQuantity }
-          : prevItem
-      )
-    );
   };
 
   const getCategories = async () => {
     //TODO - zmienić na wlasciwe id wycieczki
+    // const packing_list_id = 1;
     try {
-      const response = await fetch(`http://localhost:5000/api/item_category`);
-      const jsonData: PackingItem[] = await response.json();
-      console.log(jsonData);
-      setItems(jsonData);
+      const response = await fetch(
+        `http://localhost:5000/api/item_category/${packingId}`
+      );
+      const jsonData: Category[] = await response.json();
+      console.log("DLUGOSC", jsonData, jsonData.length);
+
+      const addNewParam = await Promise.all(
+        jsonData.map(async (category) => {
+          const itemCount = await getNumerOfItemsFromCategory(category.id);
+          return { ...category, itemCount };
+        })
+      );
+
+      setCategories(addNewParam);
     } catch (error) {
       console.error(error.message);
     }
   };
+
+  const getNumerOfItemsFromCategory = async (
+    item_category_id: number
+  ): Promise<number> => {
+    //TODO - zmienić na wlasciwe id wycieczki
+    const packing_list_id = 1;
+    try {
+      const response = await fetch(
+        `http://localhost:5000/api/packing_items/${item_category_id}/count`
+      );
+      const data = await response.json();
+      return data.count;
+    } catch (error) {
+      console.error(error.message);
+      return 0;
+    }
+  };
   React.useEffect(() => {
-    getCategories();
-    setRefreshFlag(false);
+    getPackingId(trip_id);
+  }, [trip_id]);
+  React.useEffect(() => {
+    if (packingId) {
+      getCategories();
+      setRefreshFlag(false);
+    }
   }, [refreshFlag]);
-
   return (
-    <div>
-      <AddItemInput setRefreshFlag={setRefreshFlag} />
+    <div className="py-2">
+      <AddCategory
+        setRefreshFlag={setRefreshFlag}
+        packing_list_id={packingId}
+      />
 
-      <Grid container spacing={2} sx={{ padding: "16px" }}>
-        {items?.map((value) => (
-          <Grid spacing={2} key={value.id}>
+      <div className="grid grid-cols-3 gap-1 overflow-auto">
+        {categories?.map((value, index) => (
+          <div key={value.id}>
             <div
-              style={{
-                border: "1px solid #ccc",
-                borderRadius: "8px",
-                padding: "16px",
-                textAlign: "center",
-              }}
-              className=" hover:bg-indigo-200 cursor-pointer"
-              //   onClick={}
-              // TODO: Add selecting list
+              // style={{
+              //   border: "1px solid #ccc",
+              //   borderRadius: "8px",
+              //   padding: "16px",
+              //   textAlign: "center",
+              // }}
+              className={`border-2 rounded-lg hover:border-sky-400 p-4 text-center cursor-pointer duration-300 ease-in-out ${
+                selectedCategoryId === value.id
+                  ? "border-sky-400"
+                  : "border:-grey"
+              }`}
+              onClick={() => setSelectedCategoryId(value.id)}
             >
-              <Typography variant="h6">{value.name}</Typography>
-              {/* <Typography variant="h6">{value.quantity}</Typography> */}
+              <Typography variant="h6">
+                {truncateText(value.name, 10)}{" "}
+              </Typography>
+              <Typography variant="body2">{value.itemCount}</Typography>
             </div>
-          </Grid>
+          </div>
         ))}
-      </Grid>
+      </div>
     </div>
   );
 }

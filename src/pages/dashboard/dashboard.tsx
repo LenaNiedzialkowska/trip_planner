@@ -19,9 +19,32 @@ import ResponsiveAppBar from "./appBar.tsx";
 import CategoryList from "../packingList/categoryList.tsx";
 
 const drawerWidth = 240;
+interface Trips {
+  id: number;
+  name: string;
+  number_of_destinations: number;
+  start_date: Date;
+  end_date: Date;
+  cost: number;
+  user_id: number;
+}
 
 export default function ClippedDrawer() {
   const [selectedTab, setSelectedTab] = React.useState("Plan");
+  const [selectedCategoryId, setSelectedCategoryId] = React.useState<
+    number | null
+  >(null);
+
+  const getTripId = async () => {
+    const id = 1;
+    try {
+      const response = await fetch(`http://localhost:5000/api/trips`);
+      const jsonData: Trips[] = await response.json();
+      console.log(jsonData);
+    } catch (error) {
+      console.error(error.message);
+    }
+  };
 
   const tabs = ["Plan", "Budget", "Packing"];
   return (
@@ -73,10 +96,19 @@ export default function ClippedDrawer() {
       </Drawer>
       <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
         <Toolbar />
-        {selectedTab === "Plan" && (
-          <div className="grid grid-cols-2">
-            <CategoryList />
-            <PackingList />
+        {selectedTab === "Packing" && (
+          <div className="grid grid-cols-2 justify-items-center">
+            <>
+              <CategoryList
+                selectedCategoryId={selectedCategoryId}
+                setSelectedCategoryId={setSelectedCategoryId}
+                //TODO: change to trip id
+                trip_id={1}
+              />
+              {selectedCategoryId && (
+                <PackingList item_category_id={selectedCategoryId} />
+              )}
+            </>
           </div>
         )}
       </Box>
