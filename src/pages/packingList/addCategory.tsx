@@ -2,7 +2,7 @@ import React, { Fragment, useState } from "react";
 
 interface Props {
   setRefreshFlag: React.Dispatch<React.SetStateAction<boolean>>;
-  packing_list_id: number;
+  packing_list_id: number | null;
 }
 
 export default function AddCategory({

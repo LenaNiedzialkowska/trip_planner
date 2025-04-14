@@ -30,15 +30,18 @@ export default function AddItemInput(Props) {
   };
   return (
     <Fragment>
-      <form className="flex justify-between mb-4" onSubmit={onSubmitForm}>
+      <form className="flex flex-col items-center justify-between mb-4 flex justify-content-between w-[70%]" onSubmit={onSubmitForm}>
+        <div className="px-2 border-2 border-grey rounded-lg shadow-md shadow-grey-500/50">
         <input
           type="text"
-          className="form-control border-solid border-s border-black"
+          className="h-[100%] border border-0"
+          placeholder="Add item..."
           onChange={(e) => setNewItemName(e.target.value)}
         ></input>
         <button className="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded-lg">
-          Add item
+          {">"}
         </button>
+        </div>
       </form>
     </Fragment>
   );

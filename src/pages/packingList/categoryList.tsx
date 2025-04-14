@@ -17,7 +17,7 @@ import { Typography, Grid } from "@mui/material";
 interface Category {
   id: number;
   name: string;
-  packing_list_id: number;
+  packing_list_id: number | null;
   created_at: string;
   itemCount: number;
 }
@@ -25,7 +25,7 @@ interface Category {
 interface Props {
   selectedCategoryId: number | null;
   setSelectedCategoryId: (id: number) => void;
-  trip_id: number;
+  trip_id: number | null;
 }
 
 export default function CategoryList({
@@ -36,7 +36,7 @@ export default function CategoryList({
   const [checked, setChecked] = React.useState([0]);
   const [categories, setCategories] = React.useState<Category[]>([]);
   const [refreshFlag, setRefreshFlag] = React.useState<boolean>(false);
-  const [packingId, setPackingId] = React.useState<number>(1);
+  const [packingId, setPackingId] = React.useState<number | null>(null);
   // const [selectedCategory, setSelectedCategory] =
   //   React.useState<string>("Ubrania");
   const handleToggle = (value: number) => () => {
@@ -127,13 +127,17 @@ export default function CategoryList({
     return text;
   };
 
-  const getPackingId = async (trip_id: number) => {
+  const getPackingId = async (trip_id: number | null) => {
     try {
+      if (!trip_id) return;
       const response = await fetch(
-        `http://localhost:5000/api/packing_list/${trip_id}`
+        `http://localhost:5000/api/packing_lists/${trip_id}`
       );
+      if (!response.ok) throw new Error("Błąd pobierania listy pakowania");
       const jsonData = await response.json();
-      setPackingId(jsonData);
+      if (jsonData.length > 0) {
+        setPackingId(jsonData[0].id);
+      }
     } catch (error) {
       console.error(error.message);
     }
@@ -179,14 +183,17 @@ export default function CategoryList({
     }
   };
   React.useEffect(() => {
-    getPackingId(trip_id);
+    if(trip_id){
+      getPackingId(trip_id);
+
+    }
   }, [trip_id]);
   React.useEffect(() => {
     if (packingId) {
       getCategories();
       setRefreshFlag(false);
     }
-  }, [refreshFlag]);
+  }, [refreshFlag, packingId]);
   return (
     <div className="py-2">
       <AddCategory

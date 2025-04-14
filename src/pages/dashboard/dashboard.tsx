@@ -17,6 +17,9 @@ import ChecklistIcon from "@mui/icons-material/Checklist";
 import PackingList from "../packingList/packingList.tsx";
 import ResponsiveAppBar from "./appBar.tsx";
 import CategoryList from "../packingList/categoryList.tsx";
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import CardTravelIcon from '@mui/icons-material/CardTravel';
+import Trips from "../trips/showTrips.tsx";
 
 const drawerWidth = 240;
 interface Trips {
@@ -34,6 +37,7 @@ export default function ClippedDrawer() {
   const [selectedCategoryId, setSelectedCategoryId] = React.useState<
     number | null
   >(null);
+  const [selectedTrip, setSelectedTrip] = React.useState<number | null>(null);
 
   const getTripId = async () => {
     const id = 1;
@@ -46,7 +50,7 @@ export default function ClippedDrawer() {
     }
   };
 
-  const tabs = ["Plan", "Budget", "Packing"];
+  const tabs = ["Trips", "Plan", "Budget", "Packing"];
   return (
     <Box sx={{ display: "flex" }}>
       <CssBaseline />
@@ -59,7 +63,6 @@ export default function ClippedDrawer() {
             Clipped drawer
           </Typography>
         </Toolbar> */}
-        <ResponsiveAppBar />
       </AppBar>
       <Drawer
         variant="permanent"
@@ -72,19 +75,23 @@ export default function ClippedDrawer() {
           },
         }}
       >
-        <Toolbar />
+        {/* <Toolbar /> */}
         <Box sx={{ overflow: "auto" }}>
           <List>
-            {["Plan", "Budget", "Packing"].map((text, index) => (
+
+            {["Trips", "Account", "Plan", "Budget", "Packing"].map((text, index) => (
               <ListItem key={text} disablePadding>
                 <ListItemButton
                   onClick={() => setSelectedTab(text)}
                   selected={selectedTab === text}
+                  disabled={text !== "Trips" && !selectedTrip}
                 >
                   <ListItemIcon>
-                    {index === 0 && <AttachMoneyIcon />}
-                    {index === 1 && <LocationOnIcon />}
-                    {index === 2 && <ChecklistIcon />}
+                    {index === 0 && <CardTravelIcon/>}
+                    {index === 1 && <AccountCircleIcon/>}
+                    {index === 2 && <LocationOnIcon />}
+                    {index === 3 && <AttachMoneyIcon />}
+                    {index === 4 && <ChecklistIcon />}
                   </ListItemIcon>
                   <ListItemText primary={text} />
                 </ListItemButton>
@@ -95,15 +102,18 @@ export default function ClippedDrawer() {
         </Box>
       </Drawer>
       <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
-        <Toolbar />
-        {selectedTab === "Packing" && (
+        {/* <Toolbar /> */}
+        
+        {selectedTab === "Trips" && (
+          <Trips selectedTrip={selectedTrip} setSelectedTrip={setSelectedTrip} />
+        )}
+                {selectedTab === "Packing" && (
           <div className="grid grid-cols-2 justify-items-center">
             <>
               <CategoryList
                 selectedCategoryId={selectedCategoryId}
                 setSelectedCategoryId={setSelectedCategoryId}
-                //TODO: change to trip id
-                trip_id={1}
+                trip_id={selectedTrip}
               />
               {selectedCategoryId && (
                 <PackingList item_category_id={selectedCategoryId} />

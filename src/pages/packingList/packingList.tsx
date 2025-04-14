@@ -122,6 +122,7 @@ export default function CheckboxList({ item_category_id }: Props) {
       console.error(error.message);
     }
   };
+  
   React.useEffect(() => {
     if (item_category_id) {
       getItems();
@@ -130,7 +131,7 @@ export default function CheckboxList({ item_category_id }: Props) {
   }, [refreshFlag, item_category_id]);
 
   return (
-    <div className="h-[100%] w-[80%]">
+    <div className="flex flex-col align-center h-[100%] w-[80%]">
       {/* <Typography variant="h6">{value.name}</Typography> */}
       <List
         sx={{

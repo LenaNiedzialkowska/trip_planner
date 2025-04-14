@@ -29,7 +29,6 @@ CREATE TABLE
     trips (
         id SERIAL PRIMARY KEY,
         name VARCHAR(255),
-        number_of_destinations INT,
         start_date TIMESTAMP,
         end_date TIMESTAMP,
         cost FLOAT,
@@ -44,8 +43,8 @@ CREATE TABLE
         date timestamp,
         trip_id integer not null,
         FOREIGN KEY (trip_id) REFERENCES trips (id),
-        created_at TIMESTAMP DEFAULT NOW (),
-        description VARCHAR(255)
+        description VARCHAR(255),
+        created_at TIMESTAMP DEFAULT NOW ()
     );
 
 CREATE TABLE
@@ -121,7 +120,6 @@ INSERT INTO
     trips (
         id,
         name,
-        number_of_destinations,
         start_date,
         end_date,
         cost,
@@ -131,7 +129,6 @@ VALUES
     (
         1,
         'Wakacje w Grecji',
-        3,
         '2025-06-01',
         '2025-06-15',
         3000.50,
@@ -140,35 +137,35 @@ VALUES
     (
         2,
         'Weekend w Paryżu',
-        1,
         '2025-05-01',
         '2025-05-03',
         800.00,
         1
     );
 
-INSERT INTO
-    packing_lists (id, trip_id)
-VALUES
-    (1, 1);
+INSERT INTO packing_lists (trip_id) VALUES (1), (2);
 
-INSERT INTO
-    item_category (id, name, packing_list_id)
+INSERT INTO item_category (name, packing_list_id)
 VALUES
-    (1, 'Ubrania', 1),
-    (2, 'Kosmetyki', 1),
-    (3, 'Elektronika', 1);
+    ('Ubrania', 1),
+    ('Kosmetyki', 1),
+    ('Elektronika', 1),
+    ('Dziecko', 2),
+    ('Plaża', 2);
 
-INSERT INTO
-    packing_items (name, quantity, packed, item_category_id)
+INSERT INTO packing_items (name, quantity, packed, item_category_id)
 VALUES
     ('T-shirty', 5, false, 1),
     ('Spodnie', 2, true, 1),
     ('Szczoteczka do zębów', 1, true, 2),
     ('Szampon', 1, false, 2),
     ('Ładowarka do telefonu', 1, true, 3),
-    ('Powerbank', 1, false, 3);
-
+    ('Powerbank', 1, false, 3),
+    ('Pieluchy', 6, false, 4),
+    ('Strój kąpielowy', 2, true, 4),
+    ('Mleko modyfikowane', 1, true, 4),
+    ('Ręcznik', 1, false, 5),
+    ('Klapki', 1, true, 5);
 SELECT
     *
 FROM
