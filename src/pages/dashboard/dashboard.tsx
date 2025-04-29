@@ -20,6 +20,7 @@ import CategoryList from "../packingList/categoryList.tsx";
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import CardTravelIcon from '@mui/icons-material/CardTravel';
 import Trips from "../trips/showTrips.tsx";
+import BasicDateCalendar from "../plan/calendar.tsx";
 
 const drawerWidth = 240;
 interface Trips {
@@ -121,6 +122,7 @@ export default function ClippedDrawer() {
             </>
           </div>
         )}
+        {selectedTab === "Plan" && (<BasicDateCalendar/>)}
       </Box>
     </Box>
   );
