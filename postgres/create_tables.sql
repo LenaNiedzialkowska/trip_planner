@@ -37,27 +37,20 @@ CREATE TABLE
         created_at TIMESTAMP DEFAULT NOW ()
     );
 
-CREATE TABLE
-    daily_plans (
-        id SERIAL PRIMARY KEY,
-        date timestamp,
-        trip_id integer not null,
-        FOREIGN KEY (trip_id) REFERENCES trips (id),
-        description VARCHAR(255),
-        created_at TIMESTAMP DEFAULT NOW ()
-    );
 
-CREATE TABLE
-    events (
-        id SERIAL PRIMARY KEY,
-        name VARCHAR(255),
-        time time,
-        description VARCHAR(255),
-        cost float,
-        daily_plan_id integer not null,
-        FOREIGN KEY (daily_plan_id) REFERENCES daily_plans (id),
-        created_at TIMESTAMP DEFAULT NOW ()
-    );
+CREATE TABLE 
+events (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255),
+    date DATE,
+    time TIME,
+    description VARCHAR(255),
+    cost FLOAT,
+    trip_id INTEGER NOT NULL,
+    FOREIGN KEY (trip_id) REFERENCES trips (id),
+    created_at TIMESTAMP DEFAULT NOW ()
+);
+
 
 CREATE TABLE
     expenses_category (
@@ -166,6 +159,13 @@ VALUES
     ('Mleko modyfikowane', 1, true, 4),
     ('Ręcznik', 1, false, 5),
     ('Klapki', 1, true, 5);
+
+INSERT INTO events (name, date, time, description, cost, trip_id)
+VALUES ('Zwiedzanie Akropolu', NULL, NULL,'Wycieczka do Akropolu', 50.0, 1);
+
+INSERT INTO events (name, date, time, description, cost, trip_id)
+VALUES ('Kolacja w tawernie', '2025-06-02', '20:00', 'Kolacja z lokalnymi potrawami', 30.0, 1);
+
 SELECT
     *
 FROM

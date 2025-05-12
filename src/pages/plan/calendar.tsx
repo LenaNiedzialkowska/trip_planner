@@ -15,17 +15,40 @@ import {
 import DatePickerValue from './datePicker.tsx'
 import dayjs, { Dayjs } from 'dayjs';
 import allLocales from '@fullcalendar/core/locales-all.js'
+import router from '../../../server/routes/events.js'
 type DemoAppProps = {
-  onEventDrop: (id: number) =>void;
+  onEventDrop: (id: number) => void;
+}
+interface Events {
+  id: number;
+  name: string;
+  trip_id: number;
+  date: Date;
+  time: Date;
+  description: string;
+  cost: Float32Array;
+}
+type CalendarEvent = {
+  id: number;
+  title: string;
+  start: string;
+  description?: string;
+  cost?: number | Float32Array;
+};
+
+
+interface Props {
+  trip_id: number | null;
 }
 
-export function DemoApp({onEventDrop}: DemoAppProps) {
+export function DemoApp({ onEventDrop }: DemoAppProps) {
   const [weekendsVisible, setWeekendsVisible] = useState(true);
   const [currentEvents, setCurrentEvents] = useState([]);
   const [showPopup, setShowPopup] = useState<boolean>(false);
   const [selectedEvent, setSelectedEvent] = useState<any>(null);
   const [selectedEventDate, setSelectedEventDate] = useState<string>();
   const [valueDatePicker, setValueDatePicker] = React.useState<Dayjs | null>(dayjs());
+
 
   function handleWeekendsToggle() {
     setWeekendsVisible(!weekendsVisible)
@@ -50,7 +73,7 @@ export function DemoApp({onEventDrop}: DemoAppProps) {
 
   function handleDrop(info: DropArg) {
     const id = parseInt(info.draggedEl.getAttribute('data-id') || '0');
-    if(id){
+    if (id) {
       onEventDrop(id)
 
     }
@@ -68,8 +91,8 @@ export function DemoApp({onEventDrop}: DemoAppProps) {
     // let date = info.event.start?.toLocaleDateString('pl-PL', {day: '2-digit', month: 'numeric', year:'numeric'});
     // date = date?.replaceAll(".", "-")
     const date = info.event.start;
-    if(date){
-      const fullDate = `${date?.getMonth()+1}-${date?.getDate()}-${date?.getFullYear()}`
+    if (date) {
+      const fullDate = `${date?.getMonth() + 1}-${date?.getDate()}-${date?.getFullYear()}`
       console.log(fullDate);
       setSelectedEventDate(fullDate);
     }
@@ -78,27 +101,30 @@ export function DemoApp({onEventDrop}: DemoAppProps) {
     // }
   }
 
-  function handleRemove () {
+  function handleRemove() {
     console.log(selectedEvent);
 
     if (window.confirm(`Are you sure you want to delete the event '${selectedEvent.title}'`)) {
-      selectedEvent.remove()
+      selectedEvent.remove();
+      // setCurrentEvents(prev => prev.filter(event => event.id !== selectedEvent.id));
+      setShowPopup(false);
     }
   }
 
-  function handleUpdate(){
+  function handleUpdate() {
     // let title = prompt(selectedEvent.title)
     let title = selectedEvent.title;
-    selectedEvent.setProp('title',title)
-    if(valueDatePicker){
-      selectedEvent.setStart(dayjs(valueDatePicker).toDate());
-      selectedEvent.setEnd(dayjs(valueDatePicker).toDate());
+    selectedEvent.setProp('title', title)
+    if (valueDatePicker) {
+      selectedEvent.setStart(dayjs(valueDatePicker).startOf('day').toDate());
+      selectedEvent.setEnd(dayjs(valueDatePicker).endOf('day').toDate());
       alert("Updated")
     }
   }
 
   function handleEvents(events) {
-    setCurrentEvents(events)
+    setCurrentEvents(events);
+
   }
 
   return (
@@ -126,45 +152,45 @@ export function DemoApp({onEventDrop}: DemoAppProps) {
           initialEvents={INITIAL_EVENTS} // alternatively, use the `events` setting to fetch from a feed
           select={handleDateSelect}
           eventContent={renderEventContent} // custom render function
-          eventClick={(info) => {handleEventClick(info); }}
+          eventClick={(info) => { handleEventClick(info); }}
           eventsSet={handleEvents} // called after events are initialized/added/changed/removed
-        /* you can update a remote database when these fire:
-        eventAdd={function(){}}
-        eventChange={function(){}}
-        eventRemove={function(){}}
-        */
-       drop={handleDrop}
+          /* you can update a remote database when these fire:
+          eventAdd={function(){}}
+          eventChange={function(){}}
+          eventRemove={function(){}}
+          */
+          drop={handleDrop}
         />
       </div>
       {showPopup && (
-  <div className=" bg-gray-400/50 flex items-center justify-center h-full w-full z-[1300] fixed top-0 left-0">
-    <div className="relative w-[70vw] h-[80vh] bg-white opacity-100 flex items-center justify-center flex-col rounded-lg shadow-lg p-6">
-      <p className="text-xl mb-4">
-        {selectedEvent.start.toLocaleDateString('pl-PL', {day: '2-digit', month: 'numeric', year:'numeric', hour: '2-digit', minute: 'numeric'})}
-        <DatePickerValue value={valueDatePicker} setValue={setValueDatePicker} defaultValue={dayjs(selectedEventDate)}/>
-      
-      </p>
-      <button 
-        onClick={() => setShowPopup(false)} 
-        className="absolute top-2 right-2 mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-      >
-        Close
-      </button>
-      <button 
-        onClick={()=>{handleRemove(); setShowPopup(false);}} 
-        className="mt-2 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
-      >
-        Remove
-      </button>
-      <button 
-        onClick={()=>{handleUpdate(); setShowPopup(false);}} 
-        className="mt-2 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
-      >
-        Update
-      </button>
-    </div>
-  </div>
-)}
+        <div className=" bg-gray-400/50 flex items-center justify-center h-full w-full z-[1300] fixed top-0 left-0">
+          <div className="relative w-[70vw] h-[80vh] bg-white opacity-100 flex items-center justify-center flex-col rounded-lg shadow-lg p-6">
+            <p className="text-xl mb-4">
+              {selectedEvent.start.toLocaleDateString('pl-PL', { day: '2-digit', month: 'numeric', year: 'numeric', hour: '2-digit', minute: 'numeric' })}
+              <DatePickerValue value={valueDatePicker} setValue={setValueDatePicker} defaultValue={dayjs(selectedEventDate)} />
+
+            </p>
+            <button
+              onClick={() => setShowPopup(false)}
+              className="absolute top-2 right-2 mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+            >
+              Close
+            </button>
+            <button
+              onClick={() => { handleRemove(); setShowPopup(false); }}
+              className="mt-2 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+            >
+              Remove
+            </button>
+            <button
+              onClick={() => { handleUpdate(); setShowPopup(false); }}
+              className="mt-2 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+            >
+              Update
+            </button>
+          </div>
+        </div>
+      )}
 
     </div>
   )
@@ -222,15 +248,85 @@ function SidebarEvent({ event }) {
   )
 }
 
-export default function BasicDateCalendar() {
+export default function BasicDateCalendar({ trip_id }: Props) {
   const draggableEl = useRef<HTMLDivElement>(null);
-  const [externalEvents, setExternalEvents ] = useState([
-    {id: 1, title:"nowe zadanie", duration: "01:00"},
-    {id: 2, title:"spotkanie", duration: "05:00"},
-    
+  const [externalEvents, setExternalEvents] = useState([
+    { id: 1, title: "nowe zadanie", duration: "01:00" },
+    { id: 2, title: "spotkanie", duration: "05:00" },
+
   ]);
+  const [events, setEvents] = useState<Events[]>([]);
+  const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
+  const [unplannedCalendarEvents, setUnplannedCalendarEvents] = useState<CalendarEvent[]>([]);
+  const [unplannedEvents, setUnplannedEvents] = useState<Events[]>([]);
+  
 
+  const getEvents = async () => {
+    try {
+      const response = await fetch(
+        `http://localhost:5000/api/events/${trip_id}`
+      );
+      const jsonData: Events[] = await response.json();
+      console.log(jsonData);
+      setEvents(jsonData);
+    } catch (error) {
+      console.error(error.message);
+    }
+  };
 
+  const getUnplannedEvents = async () => {
+    try {
+      const response = await fetch(
+        `http://localhost:5000/api/events/${trip_id}/unplanned`
+      );
+      const jsonData: Events[] = await response.json();
+      console.log("getUnplannedEvents:",jsonData);
+      setUnplannedEvents(jsonData);
+    } catch (error) {
+      console.error(error.message);
+    }
+  };
+
+  useEffect(() => {
+    getEvents();
+    getUnplannedEvents();
+  }, [])
+
+  function mapEventsToCalendarEvents(events: Events[]): CalendarEvent[] {
+    return events.map(ev => ({
+      id: ev.id,
+      title: ev.name,
+      // start: ev.date + (ev.time ? 'T' + ev.time : ''),
+      start: `${dayjs(ev.date).format('YYYY-MM-DD')}${ev.time ? 'T' + dayjs(ev.time).format('HH:mm:ss') : ''}`,
+      description: ev.description,
+      cost: ev.cost
+    }))
+  };
+
+  const updateEvent = async (description: string, cost: number, date: Date, id: number) => {
+    try {
+      const response = await fetch(
+        `http://localhost:5000/api/events/${trip_id}/${id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({description, cost, date, id }),
+        }
+      );
+      if (!response.ok) {
+        throw new Error("Failed to change quantity");
+      }
+    } catch (error) {
+      console.error(error.message);
+    }
+  };
+
+  useEffect(() => {
+    setCalendarEvents(mapEventsToCalendarEvents(events));
+    setUnplannedCalendarEvents(mapEventsToCalendarEvents(unplannedEvents));
+  }, [events]);
 
   useEffect(() => {
     let draggable: Draggable | null = null;
@@ -239,7 +335,9 @@ export default function BasicDateCalendar() {
       draggable = new Draggable(draggableEl.current, {
         itemSelector: '.fc-event',
         eventData: function (eventEl) {
-          const id = parseInt(eventEl.getAttribute('data-id') || '0')
+          const id = parseInt(eventEl.getAttribute('data-id') || '0');
+          //TODO: put 
+          // updateEvent(time, description, cost, date,id);
           return {
             id,
             title: eventEl.innerText.trim(),
@@ -256,7 +354,7 @@ export default function BasicDateCalendar() {
     }
   }, [externalEvents])
 
-  function handleEventRemove (id: number){
+  function handleEventRemove(id: number) {
     setExternalEvents(prev => prev.filter(event => event.id !== id))
 
   }
@@ -264,11 +362,11 @@ export default function BasicDateCalendar() {
   return (
     <div className="grid grid-cols-[auto_350px] gap-14">
 
-      <DemoApp onEventDrop={handleEventRemove}/>
+      <DemoApp onEventDrop={handleEventRemove} />
       <div>
         <h2>Lista zadań do zaplanowania</h2>
         <div id='draggable-el' ref={draggableEl}>
-          {externalEvents.map(event =>(
+          {unplannedCalendarEvents.map(event => (
             <div key={event.id} className='fc-event' data-id={event.id}>
               {event.title}
             </div>

@@ -51,6 +51,12 @@ export default function ClippedDrawer() {
     }
   };
 
+  React.useEffect(()=>{
+    if(selectedTrip){
+      setSelectedTab("Plan");
+    }
+  },[selectedTrip]);
+
   const tabs = ["Trips", "Plan", "Budget", "Packing"];
   return (
     <Box sx={{ display: "flex" }}>
@@ -122,7 +128,7 @@ export default function ClippedDrawer() {
             </>
           </div>
         )}
-        {selectedTab === "Plan" && (<BasicDateCalendar/>)}
+        {selectedTrip && selectedTab === "Plan" && (<BasicDateCalendar trip_id={selectedTrip}/>)}
       </Box>
     </Box>
   );
