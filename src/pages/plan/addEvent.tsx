@@ -5,26 +5,28 @@ interface Props {
   trip_id: number | null;
 }
 
-export default function AddCategory({
+export default function AddEvent({
   setRefreshFlag,
   trip_id,
 }: Props) {
-  const [newCategoryName, setNewCategoryName] = useState("");
+  const [newEventName, setNewEventName] = useState("");
 
   const onSubmitForm = async (e) => {
     e.preventDefault();
     try {
       const body = {
-        name: newCategoryName,
-        trip_id: trip_id,
+        // name: newEventName,
+        // time: ,
+        // description, 
+        // cost, 
       };
-      const response = await fetch(`http://localhost:5000/api/item_category`, {
+      const response = await fetch(`http://localhost:5000/api/events/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
       console.log(response);
-      setNewCategoryName("");
+      setNewEventName("");
       setRefreshFlag(true);
     } catch (error) {
       console.error(error.message);
@@ -37,12 +39,12 @@ export default function AddCategory({
         <input
           type="text"
           className="form-control outline-none focus:ring-0 border-none"
-          onChange={(e) => setNewCategoryName(e.target.value)}
-          placeholder="Add category"
+          onChange={(e) => setNewEventName(e.target.value)}
+          placeholder="Add Event"
         ></input>
         <button
           className="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded-lg"
-          disabled={newCategoryName ? false : true}
+          disabled={newEventName ? false : true}
         >
           {">"}
         </button>

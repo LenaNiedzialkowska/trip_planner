@@ -2,68 +2,6 @@ const express = require("express");
 const router = express.Router();
 const pool = require("../db");
 
-//create a packing list
-router.post("/packing_lists", async (req, res) => {
-  try {
-    const { trip_id } = req.body;
-    const existingList = await pool.query(
-      "SELECT * FROM packing_lists WHERE trip_id = $1",
-      [trip_id]
-    );
-    if (existingList.rows.length > 0) {
-      return res
-        .status(409)
-        .json({ error: "There is existing list for this trip" });
-    }
-    const newList = await pool.query(
-      "INSERT INTO packing_lists (trip_id, created_at) VALUES($1, NOW()) RETURNING *",
-      [trip_id]
-    );
-    res.status(201).json(newList.rows[0]);
-    // console.log(req.body);
-  } catch (error) {
-    console.error(error.message);
-    res.status(500).json({ error: "internal server error" });
-  }
-});
-
-//get a packing list
-router.get("/packing_lists/:trip_id", async (req, res) => {
-  try {
-    const { trip_id } = req.params;
-    const packingLists = await pool.query(
-      "SELECT * FROM packing_lists WHERE trip_id = $1",
-      [trip_id]
-    );
-    res.json(packingLists.rows);
-  } catch (error) {
-    console.error(error.message);
-    res.status(500).json({ error: "Internal server error" });
-  }
-});
-
-//get all packing lists
-router.get("/packing_lists", async (req, res) => {
-  try {
-    const packingLists = await pool.query("SELECT * FROM packing_lists");
-    res.json(packingLists.rows);
-  } catch (error) {
-    console.error(error.message);
-    res.status(500).json({ error: "Internal server error" });
-  }
-});
-
-//delete a packing list
-router.delete("/packing_lists", async (req, res) => {
-  try {
-    await pool.query("DELETE FROM packing_lists WHERE id=1");
-    res.json({ message: "List was deleted!" });
-  } catch (error) {
-    console.error(error.message);
-    res.status(500).json({ error: "Internal server error" });
-  }
-});
-
 //packing_items
 //Add item to packing_items
 router.post("/packing_items", async (req, res) => {
@@ -142,10 +80,10 @@ router.delete("/packing_items/:id", async (req, res) => {
 //Add category to item_category
 router.post("/item_category", async (req, res) => {
   try {
-    const { name, packing_list_id } = req.body;
+    const { name, trip_id } = req.body;
     const newCategory = await pool.query(
-      "INSERT INTO item_category (name, packing_list_id,created_at) VALUES($1, $2, NOW()) RETURNING *",
-      [name, packing_list_id]
+      "INSERT INTO item_category (name, trip_id, created_at) VALUES($1, $2, NOW()) RETURNING *",
+      [name, trip_id]
     );
     res.status(201).json(newCategory.rows[0]);
   } catch (error) {
@@ -166,12 +104,12 @@ router.get("/item_category", async (req, res) => {
 });
 
 //Get categories for trip
-router.get("/item_category/:packing_list_id", async (req, res) => {
+router.get("/item_category/:trip_id", async (req, res) => {
   try {
-    const { packing_list_id } = req.params;
+    const { trip_id } = req.params;
     const itemCategory = await pool.query(
-      "SELECT * FROM item_category WHERE packing_list_id=$1",
-      [packing_list_id]
+      "SELECT * FROM item_category WHERE trip_id=$1",
+      [trip_id]
     );
     res.json(itemCategory.rows);
   } catch (error) {

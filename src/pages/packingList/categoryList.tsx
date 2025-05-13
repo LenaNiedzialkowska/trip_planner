@@ -17,7 +17,7 @@ import { Typography, Grid } from "@mui/material";
 interface Category {
   id: number;
   name: string;
-  packing_list_id: number | null;
+  trip_id: number | null;
   created_at: string;
   itemCount: number;
 }
@@ -127,28 +127,28 @@ export default function CategoryList({
     return text;
   };
 
-  const getPackingId = async (trip_id: number | null) => {
-    try {
-      if (!trip_id) return;
-      const response = await fetch(
-        `http://localhost:5000/api/packing_lists/${trip_id}`
-      );
-      if (!response.ok) throw new Error("Błąd pobierania listy pakowania");
-      const jsonData = await response.json();
-      if (jsonData.length > 0) {
-        setPackingId(jsonData[0].id);
-      }
-    } catch (error) {
-      console.error(error.message);
-    }
-  };
+  // const getPackingId = async (trip_id: number | null) => {
+  //   try {
+  //     if (!trip_id) return;
+  //     const response = await fetch(
+  //       `http://localhost:5000/api/packing_lists/${trip_id}`
+  //     );
+  //     if (!response.ok) throw new Error("Błąd pobierania listy pakowania");
+  //     const jsonData = await response.json();
+  //     if (jsonData.length > 0) {
+  //       setPackingId(jsonData[0].id);
+  //     }
+  //   } catch (error) {
+  //     console.error(error.message);
+  //   }
+  // };
 
   const getCategories = async () => {
     //TODO - zmienić na wlasciwe id wycieczki
     // const packing_list_id = 1;
     try {
       const response = await fetch(
-        `http://localhost:5000/api/item_category/${packingId}`
+        `http://localhost:5000/api/item_category/${trip_id}`
       );
       const jsonData: Category[] = await response.json();
       console.log("DLUGOSC", jsonData, jsonData.length);
@@ -170,7 +170,7 @@ export default function CategoryList({
     item_category_id: number
   ): Promise<number> => {
     //TODO - zmienić na wlasciwe id wycieczki
-    const packing_list_id = 1;
+    // const packing_list_id = 1;
     try {
       const response = await fetch(
         `http://localhost:5000/api/packing_items/${item_category_id}/count`
@@ -182,23 +182,43 @@ export default function CategoryList({
       return 0;
     }
   };
-  React.useEffect(() => {
-    if(trip_id){
-      getPackingId(trip_id);
+  // React.useEffect(() => {
+  //   if(trip_id){
+  //     getPackingId(trip_id);
 
-    }
-  }, [trip_id]);
+  //   }
+  // }, [trip_id]);
   React.useEffect(() => {
-    if (packingId) {
+    if (trip_id) {
       getCategories();
       setRefreshFlag(false);
     }
-  }, [refreshFlag, packingId]);
+  }, [refreshFlag]);
+
+const generateCategoriesInReact = async () => {
+  try {
+    await fetch("http://localhost:5000/api/generate-categories", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ trip_id: 1, nights: 7 }),
+    });
+    console.log("Kategorie wygenerowane pomyślnie.");
+  } catch (error) {
+    console.error("Wystąpił błąd:", error.message);
+  }
+};
+
+React.useEffect(() => {
+  generateCategoriesInReact();
+}, []);
+
   return (
     <div className="py-2">
       <AddCategory
         setRefreshFlag={setRefreshFlag}
-        packing_list_id={packingId}
+        trip_id={trip_id}
       />
 
       <div className="grid grid-cols-3 gap-1 overflow-auto">

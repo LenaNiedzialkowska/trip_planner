@@ -76,19 +76,11 @@ CREATE TABLE
     );
 
 CREATE TABLE
-    packing_lists (
-        id SERIAL PRIMARY KEY,
-        trip_id integer not null,
-        FOREIGN KEY (trip_id) REFERENCES trips (id),
-        created_at TIMESTAMP DEFAULT NOW ()
-    );
-
-CREATE TABLE
     item_category (
         id SERIAL PRIMARY KEY,
         name VARCHAR(255),
-        packing_list_id integer not null,
-        FOREIGN KEY (packing_list_id) REFERENCES packing_lists (id),
+        trip_id integer not null,
+        FOREIGN KEY (trip_id) REFERENCES trips (id),
         created_at TIMESTAMP DEFAULT NOW ()
     );
 
@@ -136,35 +128,11 @@ VALUES
         1
     );
 
-INSERT INTO packing_lists (trip_id) VALUES (1), (2);
-
-INSERT INTO item_category (name, packing_list_id)
-VALUES
-    ('Ubrania', 1),
-    ('Kosmetyki', 1),
-    ('Elektronika', 1),
-    ('Dziecko', 2),
-    ('Plaża', 2);
-
-INSERT INTO packing_items (name, quantity, packed, item_category_id)
-VALUES
-    ('T-shirty', 5, false, 1),
-    ('Spodnie', 2, true, 1),
-    ('Szczoteczka do zębów', 1, true, 2),
-    ('Szampon', 1, false, 2),
-    ('Ładowarka do telefonu', 1, true, 3),
-    ('Powerbank', 1, false, 3),
-    ('Pieluchy', 6, false, 4),
-    ('Strój kąpielowy', 2, true, 4),
-    ('Mleko modyfikowane', 1, true, 4),
-    ('Ręcznik', 1, false, 5),
-    ('Klapki', 1, true, 5);
-
 INSERT INTO events (name, date, time, description, cost, trip_id)
 VALUES ('Zwiedzanie Akropolu', NULL, NULL,'Wycieczka do Akropolu', 50.0, 1);
 
 INSERT INTO events (name, date, time, description, cost, trip_id)
-VALUES ('Kolacja w tawernie', '2025-06-02', '20:00', 'Kolacja z lokalnymi potrawami', 30.0, 1);
+VALUES ('Kolacja w tawernie', NULL, NULL, 'Kolacja z lokalnymi potrawami', 30.0, 1);
 
 SELECT
     *

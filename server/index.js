@@ -12,18 +12,29 @@ const packingRoutes = require("./routes/packing");
 const userRoutes = require("./routes/users");
 // const dailyPlans = require("./routes/daily_plans");
 const events = require("./routes/events");
-const expense_categories = require("./routes/expense_categories");
+const expenseCategories = require("./routes/expense_categories");
 const expenses = require("./routes/expenses");
 const trips = require("./routes/trips");
+const generateCategories = require("./generateCategories");
 
 app.use("/api", packingRoutes);
 app.use("/api", userRoutes);
 // app.use("/api", dailyPlans);
 app.use("/api", events);
-app.use("/api", expense_categories);
+app.use("/api", expenseCategories);
 app.use("/api", expenses);
 app.use("/api", trips);
+// app.use("/api", generateCategories);
 
+app.post("/api/generate-categories", async(req, res) =>{
+  const {trip_id, nights} = req.body;
+  try {
+    await generateCategories(trip_id, nights);
+    res.status(200).json({message: "Kategorie wygenerowane pomyślnie."});
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+})
 //user
 //TODO: dodaj haszowanie hasła!!
 

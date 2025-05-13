@@ -18,7 +18,7 @@ interface PackingItem {
   name: string;
   quantity: number;
   packed: string;
-  packing_list_id: number;
+  trip_id: number;
 }
 
 interface Props {

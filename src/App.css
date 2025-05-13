@@ -25,14 +25,21 @@
 }
 
 .App-link {
-  color: #61dafb;
+  color: #c5f2ff;
 }
 
 .fc-event{
   cursor: pointer;
-  margin: 5px;
-  padding:5px;
-  background-color:#61dafb;
+  margin: 10px 0 0 0 ;
+  padding: 10px;
+  background-color:#b0efff;
+  border-radius: 15px;
+  color: black;
+  box-shadow: 1px 1px 3px rgb(201, 200, 200);
+}
+
+.fc-event:hover{
+  background-color:#94e8ff;
 }
 
 @keyframes App-logo-spin {
