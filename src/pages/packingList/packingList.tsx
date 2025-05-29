@@ -17,7 +17,7 @@ interface PackingItem {
   id: number;
   name: string;
   quantity: number;
-  packed: string;
+  packed: boolean;
   trip_id: number;
 }
 
@@ -26,22 +26,49 @@ interface Props {
 }
 
 export default function CheckboxList({ item_category_id }: Props) {
-  const [checked, setChecked] = React.useState([0]);
+  // const [checked, setChecked] = React.useState(packed);
   const [items, setItems] = React.useState<PackingItem[]>([]);
   const [refreshFlag, setRefreshFlag] = React.useState<boolean>(false);
+  // const [items, setItems] = React.useState<PackingItem[]>([]);
 
-  const handleToggle = (value: number) => () => {
-    const currentIndex = checked.indexOf(value);
-    const newChecked = [...checked];
+  const handleToggle = async (item: PackingItem) => {
+    const newPacked = item.packed === true ? false : true;
+    try {
+      await fetch(
+        `http://localhost:5000/api/packing_items/${item.id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ packed: newPacked, quantity: item.quantity })
+        });
+        // getItems();
+      setItems((prevItems) => prevItems.map(i => i.id === item.id ? { ...i, packed: newPacked } : i));
+    } catch (error) {
+      console.error("Error updating packed status:", error);
 
-    if (currentIndex === -1) {
-      newChecked.push(value);
-    } else {
-      newChecked.splice(currentIndex, 1);
     }
+    // const currentIndex = checked.indexOf(value);
+    // const newChecked = [...checked];
 
-    setChecked(newChecked);
+    // if (currentIndex === -1) {
+    //   newChecked.push(value);
+    // } else {
+    //   newChecked.splice(currentIndex, 1);
+    // }
+
+    // setChecked(newChecked);
   };
+
+  React.useEffect(() => {
+    async function fetchItems() {
+      const response = await fetch(`http://localhost:5000/api/packing_items/${item_category_id}`);
+      const data: PackingItem[] = await response.json();
+      setItems(data);
+    }
+    fetchItems();
+  }, [item_category_id]);
 
   const updateQuantity = async (item: PackingItem, newQuantity: number) => {
     try {
@@ -110,6 +137,27 @@ export default function CheckboxList({ item_category_id }: Props) {
     );
   };
 
+  const updatePackedStatus = async (item: PackingItem, newPackedStatus: boolean, quantity: number) => {
+    console.log(`updating packed status for ${item.name} to ${newPackedStatus}`);
+    try {
+      const response = await fetch(
+        `http://localhost:5000/api/packing_items/${item.id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ packed: newPackedStatus, quantity: quantity }),
+        }
+      );
+      if (!response.ok) {
+        throw new Error("Failed to change quantity");
+      }
+    } catch (error) {
+      console.error(error.message);
+    }
+  };
+
   const getItems = async () => {
     try {
       const response = await fetch(
@@ -122,7 +170,7 @@ export default function CheckboxList({ item_category_id }: Props) {
       console.error(error.message);
     }
   };
-  
+
   React.useEffect(() => {
     if (item_category_id) {
       getItems();
@@ -160,13 +208,15 @@ export default function CheckboxList({ item_category_id }: Props) {
             >
               <ListItemButton
                 role={undefined}
-                onClick={handleToggle(value.id)}
+                // onClick={handleToggle(value.id)}
                 dense
               >
                 <ListItemIcon>
                   <Checkbox
                     edge="start"
-                    checked={checked.includes(value.id)}
+                    checked={value.packed === true}
+                    // onChange={() => {updatePackedStatus(value, !value.packed, value.quantity)}}
+                    onChange={() => handleToggle(value)}
                     tabIndex={-1}
                     disableRipple
                     inputProps={{ "aria-labelledby": labelId }}

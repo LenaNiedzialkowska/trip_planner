@@ -53,8 +53,8 @@ router.put("/events/:trip_id/:id", async (req, res) => {
     const { trip_id, id } = req.params;
     const { time, description, cost, date } = req.body;
     await pool.query(
-      "UPDATE events SET description = $1, cost = $2, date = $3 WHERE trip_id = $4 AND id = $5",
-      [description, cost, date, trip_id, id]
+      "UPDATE events SET description = $1, cost = $2, date = $3, time=$4 WHERE trip_id = $5 AND id = $6",
+      [description, cost, date, time, trip_id, id]
     );
     res.json({ message: "Event status updated" });
   } catch (error) {

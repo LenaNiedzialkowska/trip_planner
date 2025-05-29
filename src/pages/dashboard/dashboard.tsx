@@ -34,7 +34,7 @@ interface Trips {
 }
 
 export default function ClippedDrawer() {
-  const [selectedTab, setSelectedTab] = React.useState("Plan");
+  const [selectedTab, setSelectedTab] = React.useState("Trips");
   const [selectedCategoryId, setSelectedCategoryId] = React.useState<
     number | null
   >(null);
@@ -51,11 +51,11 @@ export default function ClippedDrawer() {
     }
   };
 
-  React.useEffect(()=>{
-    if(selectedTrip){
-      setSelectedTab("Plan");
-    }
-  },[selectedTrip]);
+  // React.useEffect(()=>{
+  //   if(selectedTrip){
+  //     setSelectedTab("Plan");
+  //   }
+  // },[selectedTrip]);
 
   const tabs = ["Trips", "Plan", "Budget", "Packing"];
   return (

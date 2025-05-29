@@ -15,89 +15,119 @@ const pool = require("./db");
 const generateCategories = async (trip_id, nights) => {
     // const { trip_id, nights } = req.body;
     // const [categoryId, setCategoryId] = useState<number>();
+    const ExistingCategories = await pool.query(
+        "SELECT COUNT(*) FROM item_category WHERE trip_id=$1", [trip_id]
+    );
+    console.log('ExistingCategories', ExistingCategories)
+    const existingCategoriesCount= parseInt(ExistingCategories.rows[0].count,10);
+    if (existingCategoriesCount > 0) {
+        console.log(`Kategorie dla trip_id ${trip_id} już istnieją. Pomijam generowanie.`);
+        return;
+    }
+
     const defaultCategories = ["Ubrania", "Kosmetyki", "Elektronika"];
-    let categoryId;
     // const packingList =  generatePackingList(category, nights);
 
     //dodaj kategorię
-    defaultCategories.forEach(async category =>
-
-     {
+    for (const category of defaultCategories) {
 
         //czy istnieje już taka kategoria
         try {
-            // const { trip_id } = req.params;
             const itemCategory = await pool.query(
                 "SELECT id FROM item_category WHERE trip_id=$1 AND name=$2",
                 [trip_id, category]
             );
-            ;
-            categoryId = itemCategory.rows[0]?.id;
+
+            let categoryId = itemCategory.rows[0]?.id;
             // setCategoryId(res.json(itemCategory.rows));
-            if(categoryId){
-                return;
-            }
-        } catch (error) {
-            console.error(error.message);
-        }
-        
+            if (!categoryId) {
+                //jeśli nie istnieje kategoria, to dodaj ją
 
-        try {
-            const body = {
-                name: category,
-                trip_id: trip_id,
-            };
-            const response = await fetch(`http://localhost:5000/api/item_category`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(body),
-            });
-            console.log(response);
-
-        } catch (error) {
-            console.error(error.message);
-        }
-
-        //pobierz id kategorii
-        try {
-            // const { trip_id } = req.params;
-            const itemCategory = await pool.query(
-                "SELECT id FROM item_category WHERE trip_id=$1 AND name=$2",
-                [trip_id, category]
-            );
-            ;
-            categoryId = itemCategory.rows[0]?.id;
-            // setCategoryId(res.json(itemCategory.rows));
-        } catch (error) {
-            console.error(error.message);
-        }
-
-        //wylicz ilość dla rzeczy dla podanej kategorii
-        // const [packingList, setPackingList]= useState<Item[]>([]);
-        // setPackingList(generatePackingList(category, nights));
-        let packingList = generatePackingList(category, nights);
-        //dodaj po kolei przedmioty z id danej kategorii
-        packingList.forEach(async(item) =>{
-            try {
                 const body = {
-                    name: item.name,
-                    quantity: item.quantity,
-                    packed: item.packed,
-                    item_category_id: categoryId
+                    name: category,
+                    trip_id: trip_id,
                 };
-                const response = await fetch(`http://localhost:5000/api/packing_items`, {
+                const response = await fetch(`http://localhost:5000/api/item_category`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(body),
                 });
                 console.log(response);
 
-            } catch (error) {
-                console.error(error.message);
+                //pobierz id nowej kategorii
+                const newCategory = await pool.query(
+                    "SELECT id FROM item_category WHERE trip_id=$1 AND name=$2",
+                    [trip_id, category]
+                );
+
+                categoryId = newCategory.rows[0]?.id;
             }
-        })
-        
-    })
+
+            let packingList = generatePackingList(category, nights);
+            //dodaj po kolei przedmioty z id danej kategorii
+            for (const item of packingList) {
+                await pool.query(`
+    INSERT INTO packing_items (name, quantity, packed, item_category_id)
+    VALUES ($1, $2, $3, $4)
+    ON CONFLICT (item_category_id, name)
+    DO UPDATE SET quantity = EXCLUDED.quantity, packed = EXCLUDED.packed;
+`, [item.name, item.quantity, item.packed, categoryId]);
+
+                // const existingItem = await pool.query(
+                //     "SELECT id FROM packing_items WHERE item_category_id=$1 AND name=$2",
+                //     [categoryId, item.name]
+                // );
+
+                // if (existingItem.rows.length === 0) {
+                // console.log(existingItem);
+
+                //     try {
+                //         const body = {
+                //             name: item.name,
+                //             quantity: item.quantity,
+                //             packed: item.packed,
+                //             item_category_id: categoryId
+                //         };
+                //         const response = await fetch(`http://localhost:5000/api/packing_items`, {
+                //             method: "POST",
+                //             headers: { "Content-Type": "application/json" },
+                //             body: JSON.stringify(body),
+                //         });
+                //         console.log(response);
+
+                //     } catch (error) {
+                //         console.error(error.message);
+                //     }
+                // }
+            }
+
+        } catch (error) {
+            console.error(error.message);
+        }
+
+
+
+
+        // //pobierz id kategorii
+        // try {
+        //     // const { trip_id } = req.params;
+        //     const itemCategory = await pool.query(
+        //         "SELECT id FROM item_category WHERE trip_id=$1 AND name=$2",
+        //         [trip_id, category]
+        //     );
+        //     ;
+        //     categoryId = itemCategory.rows[0]?.id;
+        //     // setCategoryId(res.json(itemCategory.rows));
+        // } catch (error) {
+        //     console.error(error.message);
+        // }
+
+        //wylicz ilość dla rzeczy dla podanej kategorii
+        // const [packingList, setPackingList]= useState<Item[]>([]);
+        // setPackingList(generatePackingList(category, nights));
+
+
+    }
 
     // try {
 

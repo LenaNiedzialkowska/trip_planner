@@ -95,6 +95,9 @@ CREATE TABLE
         created_at TIMESTAMP DEFAULT NOW ()
     );
 
+ALTER TABLE packing_items
+ADD CONSTRAINT unique_item_in_category UNIQUE (item_category_id, name);
+
 INSERT INTO
     users (id, username, email, password)
 VALUES

@@ -16,6 +16,8 @@ import DatePickerValue from './datePicker.tsx'
 import dayjs, { Dayjs } from 'dayjs';
 import allLocales from '@fullcalendar/core/locales-all.js'
 import router from '../../../server/routes/events.js'
+import AddEvent from './addEvent.tsx'
+
 type DemoAppProps = {
   onEventDrop: (id: number) => void;
 }
@@ -45,25 +47,28 @@ interface Props {
 }
 
 
-  const updateEvent = async (description: string, cost: number, date: Date, id: number, trip_id: number | null) => {
-    try {
-      const response = await fetch(
-        `http://localhost:5000/api/events/${trip_id}/${id}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ description, cost, date, id }),
-        }
-      );
-      if (!response.ok) {
-        throw new Error("Failed to change ");
+const updateEvent = async (description: string, cost: number, fullDate: Date, id: number, trip_id: number | null) => {
+  const date = dayjs(fullDate).format('YYYY-MM-DD');
+  const time = dayjs(fullDate).format('HH:mm:ss');
+  console.log("updateEvent: ", description, cost, date, time, id, trip_id);
+  try {
+    const response = await fetch(
+      `http://localhost:5000/api/events/${trip_id}/${id}`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ description, cost, date, time, id }),
       }
-    } catch (error) {
-      console.error(error.message);
+    );
+    if (!response.ok) {
+      throw new Error("Failed to change ");
     }
-  };
+  } catch (error) {
+    console.error(error.message);
+  }
+};
 
 
 export function DemoApp({ onEventDrop, trip_id, events, calendarEvents, setUnplannedCalendarEvents }: DemoAppProps & Props) {
@@ -105,63 +110,65 @@ export function DemoApp({ onEventDrop, trip_id, events, calendarEvents, setUnpla
   //   }
   // }
   function handleDrop(info: DropArg) {
-  const id = parseInt(info.draggedEl.getAttribute('data-id') || '0');
-  if (id) {
-    onEventDrop(id); // Możesz wywołać onEventDrop, jeśli chcesz zaktualizować lokalny stan
+    const id = parseInt(info.draggedEl.getAttribute('data-id') || '0');
+    if (id) {
+      onEventDrop(id); // Możesz wywołać onEventDrop, jeśli chcesz zaktualizować lokalny stan
 
-    const newDate = info.dateStr; // Tutaj przekazujesz nową datę
-    console.log("newDate", newDate)
-    const selectedEvent = events.find(event => event.id === id); // Znajdź wybrane wydarzenie w currentEvents
-    
-    if (selectedEvent) {
-      // Przekazujesz dane z eventu i nową datę do updateEvent
-      console.log("id eventu: ", id);
-      updateEvent(selectedEvent.description, selectedEvent.cost, dayjs(newDate).toDate(), id, trip_id);
+      const newDate = info.dateStr; // Tutaj przekazujesz nową datę
+      console.log("newDate", newDate)
+      const selectedEvent = events.find(event => event.id === id); // Znajdź wybrane wydarzenie w currentEvents
 
-      setUnplannedCalendarEvents(prev => prev.filter(item => parseInt( item.id, 10) !== id));
+      if (selectedEvent) {
+        // Przekazujesz dane z eventu i nową datę do updateEvent
+        console.log("id eventu: ", id);
+        const fullDate = dayjs(newDate).toDate();
+        console.log("fullDate", fullDate);
+        updateEvent(selectedEvent.description, selectedEvent.cost, fullDate, id, trip_id);
 
+        setUnplannedCalendarEvents(prev => prev.filter(item => parseInt(item.id, 10) !== id));
+
+      }
     }
-  } 
-}
+  }
 
-// function handleDrop(info: DropArg) {
-//   const id = parseInt(info.draggedEl.getAttribute('data-id') || '0');
-//   if (!id) {
-//     console.warn("No event ID found for dropped element.");
-//     return;
-//   }
+  // function handleDrop(info: DropArg) {
+  //   const id = parseInt(info.draggedEl.getAttribute('data-id') || '0');
+  //   if (!id) {
+  //     console.warn("No event ID found for dropped element.");
+  //     return;
+  //   }
 
-//   const newDate = info.dateStr;
-//   console.log("newDate", newDate);
+  //   const newDate = info.dateStr;
+  //   console.log("newDate", newDate);
 
-//   let selectedEvent = currentEvents.find(event => event.id === id);
+  //   let selectedEvent = currentEvents.find(event => event.id === id);
 
-//   // If not in currentEvents, try finding in unplannedEvents
-//   if (!selectedEvent) {
-//     console.warn(`Event with ID ${id} not found in planned events. Trying unplanned events.`);
-//     selectedEvent = unplannedEvents.find(event => event.id === id);
+  //   // If not in currentEvents, try finding in unplannedEvents
+  //   if (!selectedEvent) {
+  //     console.warn(`Event with ID ${id} not found in planned events. Trying unplanned events.`);
+  //     selectedEvent = unplannedEvents.find(event => event.id === id);
 
-//     // If found, move to currentEvents
-//     if (selectedEvent) {
-//       setCurrentEvents([...currentEvents, selectedEvent]);
-//       setUnplannedEvents(prev => prev.filter(event => event.id !== id));
-//     } else {
-//       console.error(`Event with ID ${id} not found in any list.`);
-//       return;
-//     }
-//   }
+  //     // If found, move to currentEvents
+  //     if (selectedEvent) {
+  //       setCurrentEvents([...currentEvents, selectedEvent]);
+  //       setUnplannedEvents(prev => prev.filter(event => event.id !== id));
+  //     } else {
+  //       console.error(`Event with ID ${id} not found in any list.`);
+  //       return;
+  //     }
+  //   }
 
-//   onEventDrop(id);
+  //   onEventDrop(id);
 
-//   // Update the event with new date
-//   updateEvent(
-//     selectedEvent.description,
-//     selectedEvent.cost,
-//     dayjs(newDate).toDate(),
-//     id,
-//     trip_id
-//   );
-// }
+  //   // Update the event with new date
+  //   updateEvent(
+  //     selectedEvent.description,
+  //     selectedEvent.cost,
+  //     dayjs(newDate).toDate(),
+  //     id,
+  //     trip_id
+  //   );
+  // }
 
 
   function handleEventClick(info: EventClickArg) {
@@ -198,7 +205,7 @@ export function DemoApp({ onEventDrop, trip_id, events, calendarEvents, setUnpla
     }
   }
 
-  function handleUpdate() {
+  async function handleUpdate() {
     // let title = prompt(selectedEvent.title)
 
 
@@ -212,8 +219,10 @@ export function DemoApp({ onEventDrop, trip_id, events, calendarEvents, setUnpla
       }
       selectedEvent.setStart(dayjs(valueDatePicker).startOf('day').toDate());
       selectedEvent.setEnd(dayjs(valueDatePicker).endOf('day').toDate());
-      updateEvent(selectedEvent.title, selectedEvent.extendedProps.cost, selectedEvent.start, selectedEvent.id, trip_id);
+      await updateEvent(selectedEvent.title, selectedEvent.extendedProps.cost, selectedEvent.start, selectedEvent.id, trip_id);
 
+      // getEvents(); 
+      
       alert("Updated")
     }
   }
@@ -222,6 +231,24 @@ export function DemoApp({ onEventDrop, trip_id, events, calendarEvents, setUnpla
     setCurrentEvents(events);
 
   }
+
+  function handleEventDrop(info) {
+  const event = info.event;
+  const id = parseInt(event.id, 10);
+  const newDate = event.start;
+  const fullDate = dayjs(newDate).toDate();
+
+  console.log("Przesunięto wydarzenie:", id, "na nowy termin:", newDate);
+
+  const selectedEvent = events.find(ev => ev.id === id);
+  if (selectedEvent) {
+    updateEvent(selectedEvent.description, selectedEvent.cost, fullDate, id, trip_id);
+  }
+
+  // Możesz też aktualizować stan, jeśli potrzebujesz:
+  // setEvents(prev => prev.map(ev => ev.id === id ? { ...ev, date: newDate } : ev));
+}
+
 
 
   return (
@@ -258,6 +285,7 @@ export function DemoApp({ onEventDrop, trip_id, events, calendarEvents, setUnpla
           eventRemove={function(){}}
           */
           drop={handleDrop}
+          eventDrop={handleEventDrop}
         />
       </div>
       {showPopup && (
@@ -357,7 +385,14 @@ export default function BasicDateCalendar({ trip_id }: Props) {
   const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
   const [unplannedCalendarEvents, setUnplannedCalendarEvents] = useState<CalendarEvent[]>([]);
   const [unplannedEvents, setUnplannedEvents] = useState<Events[]>([]);
-
+  const [refreshFlag, setRefreshFlag] = React.useState<boolean>(false);
+  React.useEffect(() => {
+    if (trip_id) {
+      getEvents();
+      getUnplannedEvents();
+      setRefreshFlag(false);
+    }
+  }, [refreshFlag]);
 
   const getEvents = async () => {
     try {
@@ -365,7 +400,7 @@ export default function BasicDateCalendar({ trip_id }: Props) {
         `http://localhost:5000/api/events/${trip_id}`
       );
       const jsonData: Events[] = await response.json();
-      console.log(jsonData);
+      console.log("GetEvents",jsonData);
       setEvents(jsonData);
     } catch (error) {
       console.error(error.message);
@@ -385,12 +420,13 @@ export default function BasicDateCalendar({ trip_id }: Props) {
     }
   };
 
-  useEffect(() => {
-    getEvents();
-    getUnplannedEvents();
-  }, [])
+  // useEffect(() => {
+  //   getEvents();
+  //   getUnplannedEvents();
+  // }, [])
 
   function mapEventsToCalendarEvents(events: Events[]): CalendarEvent[] {
+    
     return events.map(ev => ({
       id: ev.id.toString(),
       title: ev.name,
@@ -401,9 +437,37 @@ export default function BasicDateCalendar({ trip_id }: Props) {
     }))
   };
 
+  const transformEvents = (eventsFromBackend) => {
+  return eventsFromBackend.map(event => {
+    let startDateTime;
+
+    if (event.date && event.time) {
+      const datePart = dayjs(event.date).format('YYYY-MM-DD');  // date z backendu
+      const timePart = event.time;  // HH:mm:ss
+      startDateTime = dayjs(`${datePart}T${timePart}`);
+    } else if (event.date) {
+      startDateTime = dayjs(event.date);
+    } else {
+      startDateTime = dayjs();
+    }
+
+    return {
+      id: event.id,
+      title: event.name || event.description,
+      start: startDateTime.toISOString(),  // FullCalendar używa ISO stringa
+      extendedProps: {
+        description: event.description,
+        cost: event.cost,
+        trip_id: event.trip_id
+      }
+    };
+  });
+};
+
+
   useEffect(() => {
-    setCalendarEvents(mapEventsToCalendarEvents(events));
-    setUnplannedCalendarEvents(mapEventsToCalendarEvents(unplannedEvents));
+    setCalendarEvents(transformEvents(events));
+    setUnplannedCalendarEvents(transformEvents(unplannedEvents));
   }, [events]);
 
   useEffect(() => {
@@ -440,19 +504,20 @@ export default function BasicDateCalendar({ trip_id }: Props) {
   return (
     <div className="grid grid-cols-[auto_300px] gap-8">
 
-      <DemoApp onEventDrop={handleEventRemove} trip_id={trip_id} events={events} calendarEvents={calendarEvents} setUnplannedCalendarEvents={setUnplannedCalendarEvents}/>
+      <DemoApp onEventDrop={handleEventRemove} trip_id={trip_id} events={events} calendarEvents={calendarEvents} setUnplannedCalendarEvents={setUnplannedCalendarEvents} />
       <div>
         <h2>Lista zadań do zaplanowania</h2>
+        <AddEvent setRefreshFlag={setRefreshFlag} trip_id={trip_id} />
         <div id='draggable-el' ref={draggableEl}>
           {unplannedCalendarEvents.map(event => (
-            <div key={event.id} className="fc-event"  data-id={event.id}>
+            <div key={event.id} className="fc-event" data-id={event.id}>
               {event.title}
             </div>
           ))}
         </div>
       </div>
     </div>
-  
+
 
   );
 }

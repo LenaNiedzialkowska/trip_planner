@@ -15,10 +15,8 @@ export default function AddEvent({
     e.preventDefault();
     try {
       const body = {
-        // name: newEventName,
-        // time: ,
-        // description, 
-        // cost, 
+        name: newEventName,
+        trip_id: trip_id
       };
       const response = await fetch(`http://localhost:5000/api/events/`, {
         method: "POST",
