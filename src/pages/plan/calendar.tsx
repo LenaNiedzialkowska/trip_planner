@@ -17,14 +17,15 @@ import dayjs, { Dayjs } from 'dayjs';
 import allLocales from '@fullcalendar/core/locales-all.js'
 import router from '../../../server/routes/events.js'
 import AddEvent from './addEvent.tsx'
+import { Box, CircularProgress, Typography } from '@mui/material'
 
 type DemoAppProps = {
-  onEventDrop: (id: number) => void;
+  onEventDrop: (id: string) => void;
 }
 interface Events {
-  id: number;
+  id: string;
   name: string;
-  trip_id: number;
+  trip_id: string;
   date: Date;
   time: Date;
   description: string;
@@ -40,16 +41,22 @@ type CalendarEvent = {
 
 
 interface Props {
-  trip_id: number | null;
   events: Events[];
   calendarEvents: CalendarEvent[];
   setUnplannedCalendarEvents: React.Dispatch<React.SetStateAction<CalendarEvent[]>>;
 }
 
+interface BasicCalendarProps {
+  trip_id: string | null;
+  tripName: string;
+  tripStartDate?: Date | null;
 
-const updateEvent = async (description: string, cost: number, fullDate: Date, id: number, trip_id: number | null) => {
-  const date = dayjs(fullDate).format('YYYY-MM-DD');
-  const time = dayjs(fullDate).format('HH:mm:ss');
+
+}
+
+const updateEvent = async (description: string, cost: number, fullDate: Dayjs, id: string, trip_id: string | null) => {
+  const date = fullDate.format('YYYY-MM-DD');
+  const time = fullDate.format('HH:mm:ss');
   console.log("updateEvent: ", description, cost, date, time, id, trip_id);
   try {
     const response = await fetch(
@@ -71,7 +78,7 @@ const updateEvent = async (description: string, cost: number, fullDate: Date, id
 };
 
 
-export function DemoApp({ onEventDrop, trip_id, events, calendarEvents, setUnplannedCalendarEvents }: DemoAppProps & Props) {
+export function DemoApp({ onEventDrop, trip_id, events, calendarEvents, setUnplannedCalendarEvents, tripStartDate }: DemoAppProps & Props & BasicCalendarProps) {
   const [weekendsVisible, setWeekendsVisible] = useState(true);
   const [currentEvents, setCurrentEvents] = useState<any[]>([]);
   const [showPopup, setShowPopup] = useState<boolean>(false);
@@ -79,6 +86,12 @@ export function DemoApp({ onEventDrop, trip_id, events, calendarEvents, setUnpla
   const [selectedEventDate, setSelectedEventDate] = useState<string>();
   const [valueDatePicker, setValueDatePicker] = React.useState<Dayjs | null>(dayjs());
 
+  useEffect(() => {
+    if (tripStartDate) {
+      console.log("tripStartDate", tripStartDate);
+    }
+
+  }, [tripStartDate]);
 
   function handleWeekendsToggle() {
     setWeekendsVisible(!weekendsVisible)
@@ -110,22 +123,23 @@ export function DemoApp({ onEventDrop, trip_id, events, calendarEvents, setUnpla
   //   }
   // }
   function handleDrop(info: DropArg) {
-    const id = parseInt(info.draggedEl.getAttribute('data-id') || '0');
+    // const id = parseInt(info.draggedEl.getAttribute('data-id') || '0');
+    const id = info.draggedEl.getAttribute('data-id');
     if (id) {
-      onEventDrop(id); // Możesz wywołać onEventDrop, jeśli chcesz zaktualizować lokalny stan
+      onEventDrop(id);
 
-      const newDate = info.dateStr; // Tutaj przekazujesz nową datę
+      const newDate = info.dateStr;
       console.log("newDate", newDate)
-      const selectedEvent = events.find(event => event.id === id); // Znajdź wybrane wydarzenie w currentEvents
+      const selectedEvent = events.find(event => event.id === id.toString());
 
       if (selectedEvent) {
         // Przekazujesz dane z eventu i nową datę do updateEvent
         console.log("id eventu: ", id);
-        const fullDate = dayjs(newDate).toDate();
+        const fullDate = dayjs(newDate);
         console.log("fullDate", fullDate);
-        updateEvent(selectedEvent.description, selectedEvent.cost, fullDate, id, trip_id);
+        updateEvent(selectedEvent.description, selectedEvent.cost, fullDate, id.toString(), trip_id);
 
-        setUnplannedCalendarEvents(prev => prev.filter(item => parseInt(item.id, 10) !== id));
+        setUnplannedCalendarEvents(prev => prev.filter(item => item.id !== id));
 
       }
     }
@@ -222,7 +236,7 @@ export function DemoApp({ onEventDrop, trip_id, events, calendarEvents, setUnpla
       await updateEvent(selectedEvent.title, selectedEvent.extendedProps.cost, selectedEvent.start, selectedEvent.id, trip_id);
 
       // getEvents(); 
-      
+
       alert("Updated")
     }
   }
@@ -233,21 +247,21 @@ export function DemoApp({ onEventDrop, trip_id, events, calendarEvents, setUnpla
   }
 
   function handleEventDrop(info) {
-  const event = info.event;
-  const id = parseInt(event.id, 10);
-  const newDate = event.start;
-  const fullDate = dayjs(newDate).toDate();
+    const event = info.event;
+    const id = parseInt(event.id, 10);
+    const newDate = event.start;
+    const fullDate = dayjs(newDate);
 
-  console.log("Przesunięto wydarzenie:", id, "na nowy termin:", newDate);
+    console.log("Przesunięto wydarzenie:", id, "na nowy termin:", newDate);
 
-  const selectedEvent = events.find(ev => ev.id === id);
-  if (selectedEvent) {
-    updateEvent(selectedEvent.description, selectedEvent.cost, fullDate, id, trip_id);
+    const selectedEvent = events.find(ev => ev.id === id.toString());
+    if (selectedEvent) {
+      updateEvent(selectedEvent.description, selectedEvent.cost, fullDate, id.toString(), trip_id);
+    }
+
+    // Możesz też aktualizować stan, jeśli potrzebujesz:
+    // setEvents(prev => prev.map(ev => ev.id === id ? { ...ev, date: newDate } : ev));
   }
-
-  // Możesz też aktualizować stan, jeśli potrzebujesz:
-  // setEvents(prev => prev.map(ev => ev.id === id ? { ...ev, date: newDate } : ev));
-}
 
 
 
@@ -266,7 +280,8 @@ export function DemoApp({ onEventDrop, trip_id, events, calendarEvents, setUnpla
             center: 'title',
             right: 'dayGridMonth,timeGridWeek,timeGridDay'
           }}
-          initialView='dayGridMonth'
+          initialView='timeGridWeek'
+          initialDate={dayjs(tripStartDate).format('YYYY-MM-DD')}
           editable={true}
           droppable={true}
           selectable={true}
@@ -274,7 +289,7 @@ export function DemoApp({ onEventDrop, trip_id, events, calendarEvents, setUnpla
           dayMaxEvents={true}
           weekends={weekendsVisible}
           events={calendarEvents}
-          initialEvents={INITIAL_EVENTS} // alternatively, use the `events` setting to fetch from a feed
+          // initialEvents={INITIAL_EVENTS} // alternatively, use the `events` setting to fetch from a feed
           select={handleDateSelect}
           eventContent={renderEventContent} // custom render function
           eventClick={(info) => { handleEventClick(info); }}
@@ -286,13 +301,20 @@ export function DemoApp({ onEventDrop, trip_id, events, calendarEvents, setUnpla
           */
           drop={handleDrop}
           eventDrop={handleEventDrop}
+
         />
       </div>
       {showPopup && (
-        <div className=" bg-gray-400/50 flex items-center justify-center h-full w-full z-[1300] fixed top-0 left-0">
-          <div className="relative w-[70vw] h-[80vh] bg-white opacity-100 flex items-center justify-center flex-col rounded-lg shadow-lg p-6">
+        <div className=" bg-black/50 flex items-center justify-center h-full w-full z-[1300] fixed top-0 left-0">
+          <div className="relative w-[40vw] h-[60vh] bg-white opacity-100 flex items-center justify-center flex-col rounded-lg shadow-lg p-6">
             <p className="text-xl mb-4">
-              {selectedEvent.start.toLocaleDateString('pl-PL', { day: '2-digit', month: 'numeric', year: 'numeric', hour: '2-digit', minute: 'numeric' })}
+              {/* {selectedEvent.start.toLocaleDateString('pl-PL', { day: '2-digit', month: 'numeric', year: 'numeric', hour: '2-digit', minute: 'numeric' })} */}
+              
+              <Typography variant="h4" className="font-bold mb-2">
+                {selectedEvent.title}
+                </Typography>
+                <br/>
+                <Typography variant='h6'>Actual date</Typography>
               <DatePickerValue value={valueDatePicker} setValue={setValueDatePicker} defaultValue={dayjs(selectedEventDate)} />
 
             </p>
@@ -374,18 +396,25 @@ function SidebarEvent({ event }) {
   )
 }
 
-export default function BasicDateCalendar({ trip_id }: Props) {
-  const draggableEl = useRef<HTMLDivElement>(null);
-  const [externalEvents, setExternalEvents] = useState([
-    { id: 1, title: "nowe zadanie", duration: "01:00" },
-    { id: 2, title: "spotkanie", duration: "05:00" },
+export default function BasicDateCalendar({ trip_id, tripName, tripStartDate }: BasicCalendarProps) {
+  useEffect(() => {
+    if (tripStartDate) {
+      console.log("tripStartDate", tripStartDate);
+    }
 
-  ]);
+  }, [tripStartDate]);
+  const draggableEl = useRef<HTMLDivElement>(null);
+  // const [externalEvents, setExternalEvents] = useState([
+  //   { id: 1, title: "nowe zadanie", duration: "01:00" },
+  //   { id: 2, title: "spotkanie", duration: "05:00" },
+
+  // ]);
   const [events, setEvents] = useState<Events[]>([]);
   const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
   const [unplannedCalendarEvents, setUnplannedCalendarEvents] = useState<CalendarEvent[]>([]);
   const [unplannedEvents, setUnplannedEvents] = useState<Events[]>([]);
   const [refreshFlag, setRefreshFlag] = React.useState<boolean>(false);
+  const [selectedTab, setSelectedTab] = React.useState<string>("Unplanned");
   React.useEffect(() => {
     if (trip_id) {
       getEvents();
@@ -394,13 +423,19 @@ export default function BasicDateCalendar({ trip_id }: Props) {
     }
   }, [refreshFlag]);
 
+  React.useEffect(() => {
+    if (trip_id) {
+      setRefreshFlag(true);
+    }
+  }, []);
+
   const getEvents = async () => {
     try {
       const response = await fetch(
         `http://localhost:5000/api/events/${trip_id}`
       );
       const jsonData: Events[] = await response.json();
-      console.log("GetEvents",jsonData);
+      console.log("GetEvents", jsonData);
       setEvents(jsonData);
     } catch (error) {
       console.error(error.message);
@@ -425,50 +460,72 @@ export default function BasicDateCalendar({ trip_id }: Props) {
   //   getUnplannedEvents();
   // }, [])
 
-  function mapEventsToCalendarEvents(events: Events[]): CalendarEvent[] {
-    
-    return events.map(ev => ({
-      id: ev.id.toString(),
-      title: ev.name,
-      // start: ev.date + (ev.time ? 'T' + ev.time : ''),
-      start: `${dayjs(ev.date).format('YYYY-MM-DD')}${ev.time ? 'T' + dayjs(ev.time).format('HH:mm:ss') : ''}`,
-      description: ev.description,
-      cost: ev.cost
-    }))
-  };
+  // function mapEventsToCalendarEvents(events: Events[]): CalendarEvent[] {
+
+  //   return events.map(ev => ({
+  //     id: ev.id.toString(),
+  //     title: ev.name,
+  //     // start: ev.date + (ev.time ? 'T' + ev.time : ''),
+  //     start: `${dayjs(ev.date).format('YYYY-MM-DD')}${ev.time ? 'T' + dayjs(ev.time).format('HH:mm:ss') : ''}`,
+  //     description: ev.description,
+  //     cost: ev.cost
+  //   }))
+  // };
+
+  // const getTripStartDate = async () => {
+  //   const response = await fetch(`http://localhost:5000/api/trips/${trip_id}`);
+  //   if (response.ok) {
+  //     const data = await response.json();
+
+  //     if (Array.isArray(data) && data.length > 0) {
+  //       const tripData = data[0];
+  //       const startDate = tripData.start_date;
+  //       if (startDate) {
+  //         console.log("Trip start date set to:", startDate);
+  //       }
+  //     }
+  //   }
+  // }
+
+
+  // useEffect(() => {
+  //   if (trip_id) {
+  //     getTripStartDate();
+  //   }
+  // }, [trip_id]);
 
   const transformEvents = (eventsFromBackend) => {
-  return eventsFromBackend.map(event => {
-    let startDateTime;
+    return eventsFromBackend.map(event => {
+      let startDateTime;
 
-    if (event.date && event.time) {
-      const datePart = dayjs(event.date).format('YYYY-MM-DD');  // date z backendu
-      const timePart = event.time;  // HH:mm:ss
-      startDateTime = dayjs(`${datePart}T${timePart}`);
-    } else if (event.date) {
-      startDateTime = dayjs(event.date);
-    } else {
-      startDateTime = dayjs();
-    }
+      if (event.date && event.time) {
+        const datePart = dayjs(event.date).format('YYYY-MM-DD');  // date z backendu
+        const timePart = event.time;  // HH:mm:ss
+        startDateTime = dayjs(`${datePart}T${timePart}`);
+      } else if (event.date) {
+        startDateTime = dayjs(event.date);
+      } else {
+        startDateTime = dayjs();
+      }
 
-    return {
-      id: event.id,
-      title: event.name || event.description,
-      start: startDateTime.toISOString(),  // FullCalendar używa ISO stringa
-      extendedProps: {
+      return {
+        id: event.id,
+        title: event.name || event.description,
+        start: startDateTime.toISOString(),
+        // extendedProps: {
         description: event.description,
         cost: event.cost,
         trip_id: event.trip_id
-      }
-    };
-  });
-};
+        // }
+      };
+    });
+  };
 
 
   useEffect(() => {
     setCalendarEvents(transformEvents(events));
     setUnplannedCalendarEvents(transformEvents(unplannedEvents));
-  }, [events]);
+  }, [events, refreshFlag, unplannedEvents]);
 
   useEffect(() => {
     let draggable: Draggable | null = null;
@@ -494,30 +551,111 @@ export default function BasicDateCalendar({ trip_id }: Props) {
         draggable.destroy();
       }
     }
-  }, [externalEvents])
+  }, [])
 
-  function handleEventRemove(id: number) {
-    setExternalEvents(prev => prev.filter(event => event.id !== id))
-
+  function handleEventRemove(id: string) {
+    // setExternalEvents(prev => prev.filter(event => event.id !== id))
+    setUnplannedCalendarEvents(prev => prev.filter(event => event.id !== id));
   }
 
-  return (
-    <div className="grid grid-cols-[auto_300px] gap-8">
+  const unplannedEventsCount = unplannedCalendarEvents.length;
+  const eventsCount = calendarEvents.length;
 
-      <DemoApp onEventDrop={handleEventRemove} trip_id={trip_id} events={events} calendarEvents={calendarEvents} setUnplannedCalendarEvents={setUnplannedCalendarEvents} />
-      <div>
-        <h2>Lista zadań do zaplanowania</h2>
-        <AddEvent setRefreshFlag={setRefreshFlag} trip_id={trip_id} />
-        <div id='draggable-el' ref={draggableEl}>
-          {unplannedCalendarEvents.map(event => (
-            <div key={event.id} className="fc-event" data-id={event.id}>
-              {event.title}
-            </div>
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-[65%_auto] gap-8  bg-gray-50 min-h-screen">
+      <div className='mt-10 mx-6'>
+        <DemoApp
+          onEventDrop={handleEventRemove}
+          trip_id={trip_id}
+          events={events}
+          calendarEvents={calendarEvents}
+          setUnplannedCalendarEvents={setUnplannedCalendarEvents}
+          tripName={tripName}
+          tripStartDate={tripStartDate}
+        />
+      </div>
+      <div className="bg-white rounded-lg shadow-lg p-6 space-y-6">
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+          <Typography variant="h4" className="font-bold">{tripName}</Typography>
+          <div className="flex items-center gap-3">
+            <Typography variant="h6" className="text-blue-600">
+              {((1 - (unplannedEventsCount / eventsCount)) * 100) > 0 ? ((1 - (unplannedEventsCount / eventsCount)) * 100).toFixed(0) : 0}%
+            </Typography>
+            <Box position="relative" display="inline-flex">
+              <CircularProgress variant="determinate" value={100} sx={{ color: "#e0e0e0" }} size={50} />
+              <CircularProgress variant="determinate" value={(1 - (unplannedEventsCount / eventsCount)) > 0 ? (1 - (unplannedEventsCount / eventsCount)) * 100 : 0} sx={{ position: "absolute", color: "#42a5f5" }} size={50} />
+            </Box>
+            <Typography variant="body2" className="text-gray-600 text-center leading-tight">
+              Rozplanowanych<br />wydarzeń
+            </Typography>
+          </div>
+        </div>
+
+        <div className="flex gap-6 border-b pb-2">
+          {["Unplanned", "DayByDay"].map(tab => (
+            <button
+              key={tab}
+              className={`font-semibold pb-1 border-b-2 transition ${selectedTab === tab
+                ? "border-blue-500 text-blue-600"
+                : "border-transparent text-gray-600 hover:text-blue-500"
+                }`}
+              onClick={() => setSelectedTab(tab)}
+            >
+              {tab === "Unplanned" ? "Lista zadań do zaplanowania" : "Dzień po dniu"}
+            </button>
           ))}
         </div>
+
+        {selectedTab === "Unplanned" && (
+          <div className="space-y-4">
+            <AddEvent setRefreshFlag={setRefreshFlag} trip_id={trip_id} />
+            <div
+              id="draggable-el"
+              ref={draggableEl}
+              className="flex flex-col gap-3 p-4 bg-gray-100 rounded-lg max-h-96 overflow-y-auto"
+            >
+              {unplannedCalendarEvents.length === 0 ? (
+                <p className="text-gray-500 text-center">Brak zadań do zaplanowania</p>
+              ) : (
+                unplannedCalendarEvents.map(event => (
+                  <div
+                    key={event.id}
+                    className="fc-event bg-white shadow-sm hover:shadow-md p-3 rounded-md border cursor-move transition"
+                    data-id={event.id}
+                  >
+                    {event.title}
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        )}
+
+        {selectedTab === "DayByDay" && (
+          <div className="space-y-2 max-h-96 overflow-y-auto">
+            <div className="grid grid-cols-3 font-semibold text-gray-700 border-b pb-2">
+              <span>Data</span>
+              <span>Nazwa</span>
+              <span>Opis</span>
+            </div>  
+            {events
+              .slice()
+              .sort((a, b) => dayjs(a.date).diff(dayjs(b.date)))
+              .map(event => (
+                <div
+                  key={event.id}
+                  className="grid grid-cols-3 gap-4 bg-white shadow-sm hover:shadow-md p-3 rounded-md border transition"
+                >
+                  <p>{dayjs(event.date).format("DD-MM-YYYY")}</p>
+                  {/* <p>{dayjs(event.time).format("HH:mm:ss")}</p> */}
+                  <p>{event.name}</p>
+                  <p>{event.description}</p>
+                </div>
+              ))}
+          </div>
+        )}
       </div>
     </div>
-
 
   );
 }

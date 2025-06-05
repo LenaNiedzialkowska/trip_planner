@@ -12,31 +12,47 @@ import RemoveIcon from "@mui/icons-material/Remove";
 import AddIcon from "@mui/icons-material/Add";
 import AddItemInput from "./addItemInput.tsx";
 import AddCategory from "./addCategory.tsx";
-import { Typography, Grid } from "@mui/material";
+import { Typography, Grid, Box } from "@mui/material";
+import CheckroomIcon from '@mui/icons-material/Checkroom';
+import CircularProgress from '@mui/material/CircularProgress';
+import LinearProgress from '@mui/material/LinearProgress';
+import ChooseCategory from "./chooseCategory.tsx";
 
 interface Category {
-  id: number;
+  id: string;
   name: string;
-  trip_id: number | null;
+  trip_id: string | null;
   created_at: string;
   itemCount: number;
+  packedItemCount: number;
 }
 
 interface Props {
-  selectedCategoryId: number | null;
-  setSelectedCategoryId: (id: number) => void;
-  trip_id: number | null;
+  selectedCategoryId: string | null;
+  setSelectedCategoryId: (id: string) => void;
+  selectedCategoryName: string;
+  setSelectedCategoryName: React.Dispatch<React.SetStateAction<string>>;
+  trip_id: string | null;
+  refreshPackedItemsFlag: boolean;
+  setRefreshPackedItemsFlag: React.Dispatch<React.SetStateAction<boolean>>;
+  numberOfNights?: number | null;
 }
 
 export default function CategoryList({
   selectedCategoryId,
   setSelectedCategoryId,
+  selectedCategoryName, 
+  setSelectedCategoryName,
   trip_id,
+  refreshPackedItemsFlag,
+  setRefreshPackedItemsFlag,
+  numberOfNights,
 }: Props) {
   const [checked, setChecked] = React.useState([0]);
   const [categories, setCategories] = React.useState<Category[]>([]);
   const [refreshFlag, setRefreshFlag] = React.useState<boolean>(false);
   const [packingId, setPackingId] = React.useState<number | null>(null);
+  const defaultCategories = ["Ubrania", "Kosmetyki", "Elektronika"];
   // const [selectedCategory, setSelectedCategory] =
   //   React.useState<string>("Ubrania");
   const handleToggle = (value: number) => () => {
@@ -127,7 +143,7 @@ export default function CategoryList({
     return text;
   };
 
-  // const getPackingId = async (trip_id: number | null) => {
+  // const getPackingId = async (trip_id: string | null) => {
   //   try {
   //     if (!trip_id) return;
   //     const response = await fetch(
@@ -156,7 +172,10 @@ export default function CategoryList({
       const addNewParam = await Promise.all(
         jsonData.map(async (category) => {
           const itemCount = await getNumerOfItemsFromCategory(category.id);
-          return { ...category, itemCount };
+          const packedItemCount = await getNumerOfPackedItemsFromCategory(
+            category.id
+          );
+          return { ...category, itemCount, packedItemCount };
         })
       );
 
@@ -167,7 +186,7 @@ export default function CategoryList({
   };
 
   const getNumerOfItemsFromCategory = async (
-    item_category_id: number
+    item_category_id: string
   ): Promise<number> => {
     //TODO - zmienić na wlasciwe id wycieczki
     // const packing_list_id = 1;
@@ -175,6 +194,25 @@ export default function CategoryList({
       const response = await fetch(
         `http://localhost:5000/api/packing_items/${item_category_id}/count`
       );
+
+      const data = await response.json();
+      return data.count;
+    } catch (error) {
+      console.error(error.message);
+      return 0;
+    }
+  };
+
+  const getNumerOfPackedItemsFromCategory = async (
+    item_category_id: string
+  ): Promise<number> => {
+    //TODO - zmienić na wlasciwe id wycieczki
+    // const packing_list_id = 1;
+    try {
+      const response = await fetch(
+        `http://localhost:5000/api/packing_items/${item_category_id}/count_packed `
+      );
+
       const data = await response.json();
       return data.count;
     } catch (error) {
@@ -192,34 +230,67 @@ export default function CategoryList({
     if (trip_id) {
       getCategories();
       setRefreshFlag(false);
+      setRefreshPackedItemsFlag(false);
     }
-  }, [refreshFlag]);
+  }, [refreshFlag, refreshPackedItemsFlag, trip_id]);
 
-const generateCategoriesInReact = async () => {
-  try {
-    await fetch("http://localhost:5000/api/generate-categories", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ trip_id: 1, nights: 7 }),
-    });
-    console.log("Kategorie wygenerowane pomyślnie.");
-  } catch (error) {
-    console.error("Wystąpił błąd:", error.message);
-  }
-};
+  const generateCategoriesInReact = async (category) => {
+    try {
+      await fetch("http://localhost:5000/api/generate-categories", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({category, trip_id: trip_id, nights: numberOfNights }),
+      });
+      console.log("Kategorie wygenerowane pomyślnie.");
+    } catch (error) {
+      console.error("Wystąpił błąd:", error.message);
+    }
+  };
 
-React.useEffect(() => {
-  generateCategoriesInReact();
-}, []);
+  React.useEffect(() => {
+    const fetchData = async () =>{
+      for (const category of defaultCategories){
+        await generateCategoriesInReact(category);
+        console.log(`Generated category: ${category}`);
+      }
+    setRefreshFlag(true);
+
+    }
+    fetchData();
+  }, []);
+
+
+
+
+  const initialValue = 0;
+  const countPackedItems = categories.reduce(
+    (accumulator, currentValue) => accumulator + currentValue.packedItemCount, initialValue);
+  
+    const countAllItems = categories.reduce(
+    (accumulator, currentValue) => accumulator + currentValue.itemCount, initialValue);
+
+
 
   return (
-    <div className="py-2">
-      <AddCategory
+    <div className="py-2 px-4 w-[100%] bg-[#f9fcfd]">
+      {/* <AddCategory
         setRefreshFlag={setRefreshFlag}
         trip_id={trip_id}
+      /> */}
+      <ChooseCategory
+      setRefreshFlag={setRefreshFlag}
+        trip_id={trip_id}
+        numberOfNights={numberOfNights}
       />
+      <Box sx={{mb:2, display: "flex", alignItems: "center", justifyContent: "space-between"}}>
+
+          <span className="text-blue-400 font-bold">{Math.trunc((countPackedItems/countAllItems)*100)||0}%</span>
+        <LinearProgress variant="determinate" value={(countPackedItems/countAllItems)*100}  sx={{height: "7px", borderRadius:"5px", width: '90%', backgroundColor: "#e8e8e8", '& .MuiLinearProgress-bar': {
+        backgroundColor: '#00bcff', 
+      },}} />
+        </Box>
 
       <div className="grid grid-cols-3 gap-1 overflow-auto">
         {categories?.map((value, index) => (
@@ -231,17 +302,20 @@ React.useEffect(() => {
               //   padding: "16px",
               //   textAlign: "center",
               // }}
-              className={`border-2 rounded-lg hover:border-sky-400 p-4 text-center cursor-pointer duration-300 ease-in-out ${
-                selectedCategoryId === value.id
-                  ? "border-sky-400"
-                  : "border:-grey"
-              }`}
-              onClick={() => setSelectedCategoryId(value.id)}
+              className={`border-2 bg-white rounded-lg hover:border-blue-400 p-4 text-center cursor-pointer duration-300 ease-in-out ${selectedCategoryId === value.id
+                  ? "border-blue-400"
+                  : "border:-gray"
+                }`}
+              onClick={() => {setSelectedCategoryId(value.id); setSelectedCategoryName(value.name)}}
             >
               <Typography variant="h6">
                 {truncateText(value.name, 10)}{" "}
               </Typography>
-              <Typography variant="body2">{value.itemCount}</Typography>
+              <Box position="relative" display="inline-flex">
+                <CircularProgress variant="determinate" value={100} sx={{ color: "#e8e8e8" }} />
+                <CircularProgress variant="determinate" value={(value.packedItemCount / value.itemCount) > 0 ?(value.packedItemCount / value.itemCount) * 100 : 0} sx={{position: "absolute", color: "#00bcff"}} />
+                </Box>
+              <Typography variant="body2">{value.packedItemCount}/{value.itemCount}</Typography>
             </div>
           </div>
         ))}

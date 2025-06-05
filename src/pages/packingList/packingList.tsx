@@ -11,21 +11,28 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import RemoveIcon from "@mui/icons-material/Remove";
 import AddIcon from "@mui/icons-material/Add";
 import AddItemInput from "./addItemInput.tsx";
-import { Grid, Typography } from "@mui/material";
+import { Box, Grid, Typography } from "@mui/material";
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import CircleUnchecked from '@mui/icons-material/RadioButtonUnchecked';
 
 interface PackingItem {
-  id: number;
+  id: string;
   name: string;
   quantity: number;
   packed: boolean;
-  trip_id: number;
+  trip_id: string;
 }
 
 interface Props {
-  item_category_id: number;
+  item_category_id: string;
+  selectedCategoryName: string;
+  setSelectedCategoryName: React.Dispatch<React.SetStateAction<string>>;
+  refreshPackedItemsFlag: boolean;
+  setRefreshPackedItemsFlag: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-export default function CheckboxList({ item_category_id }: Props) {
+export default function CheckboxList({ item_category_id, selectedCategoryName,
+  setSelectedCategoryName, refreshPackedItemsFlag, setRefreshPackedItemsFlag }: Props) {
   // const [checked, setChecked] = React.useState(packed);
   const [items, setItems] = React.useState<PackingItem[]>([]);
   const [refreshFlag, setRefreshFlag] = React.useState<boolean>(false);
@@ -43,7 +50,8 @@ export default function CheckboxList({ item_category_id }: Props) {
           },
           body: JSON.stringify({ packed: newPacked, quantity: item.quantity })
         });
-        // getItems();
+      // getItems();
+      // setRefreshFlag(true);
       setItems((prevItems) => prevItems.map(i => i.id === item.id ? { ...i, packed: newPacked } : i));
     } catch (error) {
       console.error("Error updating packed status:", error);
@@ -179,15 +187,16 @@ export default function CheckboxList({ item_category_id }: Props) {
   }, [refreshFlag, item_category_id]);
 
   return (
-    <div className="flex flex-col align-center h-[100%] w-[80%]">
-      {/* <Typography variant="h6">{value.name}</Typography> */}
+    <div className="flex flex-col align-center h-[100%] w-[100%] p-8">
+      <Typography variant="h6">{selectedCategoryName}</Typography>
       <List
         sx={{
           width: "100%",
-          maxWidth: 360,
+          // maxWidth: 360,
           bgcolor: "background.paper",
           height: "70vh",
           overflow: "auto",
+          paddingRight: "20px",
         }}
       >
         {items?.map((value) => {
@@ -197,26 +206,87 @@ export default function CheckboxList({ item_category_id }: Props) {
             <ListItem
               key={value.id}
               secondaryAction={
-                <IconButton edge="end" aria-label="comments">
-                  <RemoveIcon onClick={() => substractItem(value)} />
-                  {/* {value.quantity} */} {value.quantity}
-                  <AddIcon onClick={() => addItem(value)} />
-                  <DeleteIcon onClick={() => deleteItem(value)} />
+                <IconButton edge="end" aria-label="comments" sx={{
+                  display: "flex",
+                  flexDirection: "row",
+                  alignItems: "center",
+                  backgroundColor: "transparent !important",
+                  // Ustaw domyślnie ukryte ikony
+                  "& .icon-action": { visibility: "hidden" },
+                  // Na hover pokazuj ikony
+                  "&:hover .icon-action": { visibility: "visible" }
+                }}>
+                  {/* <RemoveIcon onClick={() => substractItem(value)} className="icon-action" sx={{backgroundColor: "red"}} /> */}
+                  <Box
+                    className="icon-action"
+                    sx={{
+                      p: 0.5,
+                      transition: "transform color 0.2s",
+                      "&:hover": {
+                        transform: " scale(1.2)",
+                        color: "#00bcff",
+                      }
+                    }}
+                  >
+                    <RemoveIcon onClick={() => substractItem(value)} />
+                  </Box>
+                  {value.quantity}
+                  <Box
+                    className="icon-action"
+                    sx={{
+                      p: 0.5,
+                      transition: "transform color 0.2s",
+                      "&:hover": {
+                        transform: " scale(1.2)",
+                        color: "#00bcff",
+                      }
+                    }}
+                  >
+                    <AddIcon onClick={() => addItem(value)} className="icon-action" />
+                  </Box>
+                  <Box
+                    className="icon-action"
+                    sx={{
+                      p: 0.5,
+                      transition: "transform color 0.2s",
+                      "&:hover": {
+                        transform: " scale(1.2)",
+                        color: "#00bcff",
+                      }
+                    }}
+                  >
+                    <DeleteIcon onClick={() => deleteItem(value)} className="icon-action" />
+                  </Box>
                 </IconButton>
               }
+
               disablePadding
+              sx={{ width: "100%", "&:hover .icon-action": { visibility: "visible" } }}
             >
               <ListItemButton
                 role={undefined}
                 // onClick={handleToggle(value.id)}
                 dense
+                sx={{ width: "100%" }}
               >
                 <ListItemIcon>
                   <Checkbox
                     edge="start"
+                    icon={<CircleUnchecked sx={{
+                      color: "#e8e8e8",
+                      '&.Mui-checked': {
+                        color: "#e8e8e8",
+                      },
+                    }} />}
+                    checkedIcon={<CheckCircleIcon sx={{
+                      color: "#00bcff",
+                      '&.Mui-checked': {
+                        color: "#00bcff",
+                      },
+                    }} />}
                     checked={value.packed === true}
                     // onChange={() => {updatePackedStatus(value, !value.packed, value.quantity)}}
-                    onChange={() => handleToggle(value)}
+                    onChange={() => { handleToggle(value); setRefreshPackedItemsFlag(true) }}
                     tabIndex={-1}
                     disableRipple
                     inputProps={{ "aria-labelledby": labelId }}

@@ -1,17 +1,21 @@
 const express = require("express");
 const router = express.Router();
 const pool = require("../db");
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+const JWT_SECRET = 'twoj_sekret';
 
 //user
 //TODO: dodaj haszowanie hasła!!
 
 //create a user
-router.post("/users", async (req, res) => {
+router.post("/register", async (req, res) => {
   try {
-    const { username, email, password, created_at } = req.body;
+    const { username, email, password } = req.body;
+    const hashedPassword = await bcrypt.hash(password, 10);
     const newUser = await pool.query(
-      "INSERT INTO users (username, email, password, created_at) VALUES($1, $2, $3, $4) RETURNING *",
-      [username, email, password, created_at]
+      "INSERT INTO users (username, email, password) VALUES($1, $2, $3) RETURNING *",
+      [username, email, hashedPassword]
     );
     res.json(newUser.rows[0]);
     // console.log(req.body);
@@ -20,21 +24,29 @@ router.post("/users", async (req, res) => {
   }
 });
 
-//get all users
-router.get("/users", async (req, res) => {
+router.post("/login", async (req, res) => {
   try {
-    const allUsers = await pool.query("SELECT * FROM users");
-    res.json(allUsers.rows);
+    const { email, password } = req.body;
+    const userResult = await pool.query("SELECT id, username, email, password, created_at FROM users WHERE email=$1", [email]);
+    const user = userResult.rows[0];
+    if (!user) return res.status(400).json({ error: "Nieprawidłowy email lub hasło" });
+
+    const validPassword = await bcrypt.compare(password, user.password);
+    if (!validPassword) return res.status(400).json({ error: "Nieprawidłowy email lub hasło" });
+
+    const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '1h' });
+    res.json({ token, username: user.username, userId: user.id });
   } catch (error) {
     console.log(error.message);
+    res.status(500).json({ error: "Logowanie nieudane" });
   }
 });
 
 //get a user
 router.get("/users/:id", async (req, res) => {
   try {
-    const { id } = req.params;
-    const user = await pool.query("SELECT * FROM users WHERE id = $1", [id]);
+    const {id} = req.params;
+    const user = await pool.query("SELECT id, username, email, created_at FROM users WHERE id = $1", [id]);
     res.json(user.rows[0]);
     // console.log(req.params);
   } catch (error) {
@@ -46,10 +58,11 @@ router.get("/users/:id", async (req, res) => {
 router.put("/users/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const { username, email, password, created_at } = req.body;
+    const { username, email, password } = req.body;
+    const hashedPassword = await bcrypt.hash(password, 10);
     const updateUser = await pool.query(
-      "UPDATE users SET username = $1, email = $2, password=$3, created_at=$4 WHERE id=$5",
-      [username, email, password, created_at, id]
+      "UPDATE users SET username = $1, email = $2, password=$3 WHERE id=$4",
+      [username, email, hashedPassword, id]
     );
   } catch (error) {
     console.log(error.message);

@@ -48,6 +48,21 @@ router.get("/packing_items/:item_category_id/count", async (req, res) => {
   }
 });
 
+//Get number of all items from category
+router.get("/packing_items/:item_category_id/count_packed", async (req, res) => {
+  try {
+    const { item_category_id } = req.params;
+    const packingItems = await pool.query(
+      "SELECT COUNT (*) FROM packing_items WHERE item_category_id = $1 AND packed = true",
+      [item_category_id]
+    );
+    res.json({ count: parseInt(packingItems.rows[0].count, 10) });
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 //edit item
 router.put("/packing_items/:id", async (req, res) => {
   try {

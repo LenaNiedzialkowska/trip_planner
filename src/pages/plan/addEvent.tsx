@@ -2,7 +2,7 @@ import React, { Fragment, useState } from "react";
 
 interface Props {
   setRefreshFlag: React.Dispatch<React.SetStateAction<boolean>>;
-  trip_id: number | null;
+  trip_id: string | null;
 }
 
 export default function AddEvent({
@@ -37,11 +37,11 @@ export default function AddEvent({
         <input
           type="text"
           className="form-control outline-none focus:ring-0 border-none"
-          onChange={(e) => setNewEventName(e.target.value)}
+          onChange={(e) => {setNewEventName(e.target.value);}}
           placeholder="Add Event"
         ></input>
         <button
-          className="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded-lg"
+          className="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded-lg transition-all duration-300 ease-in-out"
           disabled={newEventName ? false : true}
         >
           {">"}

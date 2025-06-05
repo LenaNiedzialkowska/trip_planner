@@ -12,24 +12,24 @@ const pool = require("./db");
 //wylicz ilość dla rzeczy dla podanej kategorii
 //dodaj po kolei przedmioty z id danej kategorii
 
-const generateCategories = async (trip_id, nights) => {
+const generateCategories = async (category, trip_id, nights) => {
     // const { trip_id, nights } = req.body;
     // const [categoryId, setCategoryId] = useState<number>();
-    const ExistingCategories = await pool.query(
-        "SELECT COUNT(*) FROM item_category WHERE trip_id=$1", [trip_id]
-    );
-    console.log('ExistingCategories', ExistingCategories)
-    const existingCategoriesCount= parseInt(ExistingCategories.rows[0].count,10);
-    if (existingCategoriesCount > 0) {
-        console.log(`Kategorie dla trip_id ${trip_id} już istnieją. Pomijam generowanie.`);
-        return;
-    }
+    // const ExistingCategories = await pool.query(
+    //     "SELECT COUNT(*) FROM item_category WHERE trip_id=$1", [trip_id]
+    // );
+    // console.log('ExistingCategories', ExistingCategories)
+    // const existingCategoriesCount= parseInt(ExistingCategories.rows[0].count,10);
+    // if (existingCategoriesCount > 0) {
+    //     console.log(`Kategorie dla trip_id ${trip_id} już istnieją. Pomijam generowanie.`);
+    //     return;
+    // }
 
-    const defaultCategories = ["Ubrania", "Kosmetyki", "Elektronika"];
+    // const defaultCategories = ["Ubrania", "Kosmetyki", "Elektronika"];
     // const packingList =  generatePackingList(category, nights);
 
     //dodaj kategorię
-    for (const category of defaultCategories) {
+    // for (const category of defaultCategories) {
 
         //czy istnieje już taka kategoria
         try {
@@ -39,6 +39,9 @@ const generateCategories = async (trip_id, nights) => {
             );
 
             let categoryId = itemCategory.rows[0]?.id;
+            if(categoryId) {
+                return;
+            }
             // setCategoryId(res.json(itemCategory.rows));
             if (!categoryId) {
                 //jeśli nie istnieje kategoria, to dodaj ją
@@ -67,11 +70,11 @@ const generateCategories = async (trip_id, nights) => {
             //dodaj po kolei przedmioty z id danej kategorii
             for (const item of packingList) {
                 await pool.query(`
-    INSERT INTO packing_items (name, quantity, packed, item_category_id)
-    VALUES ($1, $2, $3, $4)
-    ON CONFLICT (item_category_id, name)
-    DO UPDATE SET quantity = EXCLUDED.quantity, packed = EXCLUDED.packed;
-`, [item.name, item.quantity, item.packed, categoryId]);
+                INSERT INTO packing_items (name, quantity, packed, item_category_id)
+                VALUES ($1, $2, $3, $4)
+                ON CONFLICT (item_category_id, name)
+                DO UPDATE SET quantity = EXCLUDED.quantity, packed = EXCLUDED.packed;
+            `, [item.name, item.quantity, item.packed, categoryId]);
 
                 // const existingItem = await pool.query(
                 //     "SELECT id FROM packing_items WHERE item_category_id=$1 AND name=$2",
@@ -127,7 +130,7 @@ const generateCategories = async (trip_id, nights) => {
         // setPackingList(generatePackingList(category, nights));
 
 
-    }
+    // }
 
     // try {
 
