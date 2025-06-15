@@ -24,6 +24,8 @@ import BasicDateCalendar from "../plan/calendar.tsx";
 import SettingsIcon from '@mui/icons-material/Settings';
 import { useParams } from "react-router-dom";
 import { setRef } from "@mui/material";
+import Settings from "../settings/settings.tsx";
+import Avatar from "@mui/material/Avatar";
 
 const drawerWidth = 240;
 interface Trips {
@@ -36,7 +38,7 @@ interface Trips {
   user_id: string;
 }
 
-interface Props{
+interface Props {
   userID: string | null;
 }
 
@@ -69,10 +71,10 @@ export default function MyApp() {
   // };
 
   //fetch user name
-  const getUserName = async () =>{
+  const getUserName = async () => {
     try {
       const response = await fetch(`http://localhost:5000/api/auth/users/${userID}`);
-      if(response.ok){
+      if (response.ok) {
         const userData = await response.json();
         console.log("User data: ", userData);
         setUserName(userData.username);
@@ -85,27 +87,27 @@ export default function MyApp() {
   //fetch count trips for user
 
   React.useEffect(() => {
-    if(userID){
+    if (userID) {
       getUserName();
       console.log("User ID: ", userID);
-      if(userName)
-      console.log("User name:", userName)
+      if (userName)
+        console.log("User name:", userName)
     }
     setRefreshFlag(false);
-  },[userID, refreshFlag])
+  }, [userID, refreshFlag])
 
 
-  React.useEffect(()=>{
-    if(selectedTrip){
+  React.useEffect(() => {
+    if (selectedTrip) {
       setSelectedTab("Plan");
     }
-  },[selectedTrip]);
+  }, [selectedTrip]);
 
-    React.useEffect(()=>{
-    if(tripStartDate){
+  React.useEffect(() => {
+    if (tripStartDate) {
       console.log("Trip start date set to: ", tripStartDate);
     }
-  },[tripStartDate]);
+  }, [tripStartDate]);
 
   // const tabs = ["Trips", "Plan", "Packing"];
   return (
@@ -146,7 +148,11 @@ export default function MyApp() {
         >
           <List>
             <Box sx={{ display: "flex", justifyContent: "center", mt: 4, mb: 2 }}>
-              <AccountCircleIcon sx={{ width: 120, height: 120, color: "primary.main" }} />
+              {/* <AccountCircleIcon sx={{ width: 120, height: 120, color: "primary.main" }} /> */}
+              <Avatar sx={{ width: 120, height: 120, bgcolor: "primary.main", mx: "auto", fontSize: "3.5rem" }}>
+                {userName?.[0]?.toUpperCase() || "U"}
+              </Avatar>
+
             </Box>
             <Typography variant="h5" sx={{ textAlign: "center", fontWeight: "bold", mb: 2 }}>
               {userName || "User Name"}
@@ -156,12 +162,12 @@ export default function MyApp() {
             </Typography>
             <Divider sx={{ mb: 2 }} />
 
-            {["Trips", "Plan", "Packing"].map((text, index) => (
+            {["Trips", "Plan", "Packing", "Settings"].map((text, index) => (
               <ListItem key={text} disablePadding sx={{ mb: 1 }}>
                 <ListItemButton
                   onClick={() => setSelectedTab(text)}
                   selected={selectedTab === text}
-                  disabled={text !== "Trips" && !selectedTrip}
+                  disabled={text !== "Trips" && text !== "Settings" && !selectedTrip}
                   sx={{
                     borderRadius: 2,
                     "&.Mui-selected": {
@@ -176,6 +182,7 @@ export default function MyApp() {
                     {index === 1 && <LocationOnIcon />}
                     {/* {index === 2 && <AttachMoneyIcon />} */}
                     {index === 2 && <ChecklistIcon />}
+                    {index === 3 && <SettingsIcon />}
                   </ListItemIcon>
                   <ListItemText primary={text} />
                 </ListItemButton>
@@ -183,8 +190,8 @@ export default function MyApp() {
             ))}
           </List>
           <Divider sx={{ mt: 2 }} />
-          
-          <Box>
+
+          {/* <Box>
             <ListItemButton
               sx={{
                 borderRadius: 2,
@@ -201,7 +208,7 @@ export default function MyApp() {
               </ListItemIcon>
               <ListItemText primary={"Settings"} />
             </ListItemButton>
-          </Box>
+          </Box> */}
         </Box>
 
       </Drawer>
@@ -209,15 +216,15 @@ export default function MyApp() {
         {/* <Toolbar /> */}
 
         {selectedTab === "Trips" && (
-          <Trips 
-          selectedTrip={selectedTrip} 
-          setSelectedTrip={setSelectedTrip} 
-          numberOfNights={numberOfNights} 
-          setNumberOfNights={setNumberOfNights} 
-          setTripName={setTripName} 
-          user_id={userID}
-          setTripStartDate={setTripStartDate}
-          setNumberOfTrips={setNumberOfTrips}
+          <Trips
+            selectedTrip={selectedTrip}
+            setSelectedTrip={setSelectedTrip}
+            numberOfNights={numberOfNights}
+            setNumberOfNights={setNumberOfNights}
+            setTripName={setTripName}
+            user_id={userID}
+            setTripStartDate={setTripStartDate}
+            setNumberOfTrips={setNumberOfTrips}
           />
         )}
         {selectedTab === "Packing" && (
@@ -244,7 +251,8 @@ export default function MyApp() {
             </>
           </div>
         )}
-        {selectedTrip && selectedTab === "Plan" && tripStartDate && (<BasicDateCalendar trip_id={selectedTrip} tripName={tripName} tripStartDate={tripStartDate}/>)}
+        {selectedTrip && selectedTab === "Plan" && tripStartDate && (<BasicDateCalendar trip_id={selectedTrip} tripName={tripName} tripStartDate={tripStartDate} />)}
+        {selectedTab === "Settings" && <Settings userId={userID} currentUsername={userName} />}
       </Box>
     </Box>
   );

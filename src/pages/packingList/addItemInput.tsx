@@ -1,4 +1,5 @@
 import React, { Fragment, useState } from "react";
+import { IoMdAdd } from "react-icons/io";
 
 interface Props {
   setRefreshFlag: React.Dispatch<React.SetStateAction<boolean>>;
@@ -30,7 +31,7 @@ export default function AddItemInput(Props) {
   };
   return (
     <Fragment>
-      <form className="flex flex-col items-center justify-between mb-4 flex justify-content-between w-[100%] flex-wrap content-start" onSubmit={onSubmitForm}>
+      <form className="flex flex-col items-center justify-between mb-4 flex justify-content-between w-[100%] flex-wrap content-center" onSubmit={onSubmitForm}>
         <div className="pl-2 border-2 border-grey rounded-lg shadow-md shadow-grey-500/50 w-[80%] flex justify-between">
         <input
           type="text"
@@ -39,7 +40,7 @@ export default function AddItemInput(Props) {
           onChange={(e) => setNewItemName(e.target.value)}
         ></input>
         <button className="bg-transparent hover:bg-blue-400 text-blue-400 font-semibold hover:text-white py-2 px-4 border border-blue-400 hover:border-transparent rounded-lg transition-all duration-300 ease-in-out">
-          {">"}
+          <IoMdAdd size={24} />
         </button>
         </div>
       </form>

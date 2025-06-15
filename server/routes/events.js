@@ -6,10 +6,10 @@ const pool = require("../db");
 //Create events
 router.post("/events", async (req, res) => {
     try {
-      const {  name, time, description, cost, trip_id} = req.body;
+      const {  name, date, start_time, end_time, description, cost, trip_id} = req.body;
       const newEvent = await pool.query(
-        "INSERT INTO events (  name, time, description, cost, trip_id, created_at) VALUES($1, $2, $3, $4, $5, NOW()) RETURNING *",
-        [  name, time, description, cost, trip_id]
+        "INSERT INTO events (  name, date, start_time, end_time, description, cost, trip_id, created_at) VALUES($1, $2, $3, $4, $5, $6, $7, NOW()) RETURNING *",
+        [  name, date, start_time, end_time, description, cost, trip_id]
       );
       res.status(201).json(newEvent.rows[0]);
     } catch (error) {
@@ -51,10 +51,10 @@ router.get("/events/:trip_id/unplanned", async (req, res) => {
 router.put("/events/:trip_id/:id", async (req, res) => {
   try {
     const { trip_id, id } = req.params;
-    const { time, description, cost, date } = req.body;
+    const { start_time, end_time, description, cost, date } = req.body;
     await pool.query(
-      "UPDATE events SET description = $1, cost = $2, date = $3, time=$4 WHERE trip_id = $5 AND id = $6",
-      [description, cost, date, time, trip_id, id]
+      "UPDATE events SET description = $1, cost = $2, date = $3, start_time=$4, end_time = $5 WHERE trip_id = $6 AND id = $7",
+      [description, cost, date, start_time, end_time, trip_id, id]
     );
     res.json({ message: "Event status updated" });
   } catch (error) {
@@ -64,10 +64,10 @@ router.put("/events/:trip_id/:id", async (req, res) => {
 });
 
 //delete an event
-router.delete("/events/:trip_id", async (req, res) => {
+router.delete("/events/:trip_id/:id", async (req, res) => {
     try {
-      const { trip_id } = req.params;
-      await pool.query("DELETE FROM events WHERE trip_id=$1", [trip_id]);
+      const { trip_id, id } = req.params;
+      await pool.query("DELETE FROM events WHERE trip_id=$1 AND id=$2", [trip_id, id]);
       res.json({ message: "Event was deleted!" });
     } catch (error) {
       console.error(error.message);

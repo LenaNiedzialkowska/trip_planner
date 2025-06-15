@@ -1,6 +1,7 @@
 import { Typography } from "@mui/material";
 import dayjs, { Dayjs } from "dayjs";
 import React, { Fragment, useState } from "react";
+import { IoIosClose } from "react-icons/io";
 
 interface Props {
     setRefreshFlag: React.Dispatch<React.SetStateAction<boolean>>;
@@ -26,7 +27,7 @@ export default function AddTrip({
                 console.error("No image selected for upload.");
                 return;
             }
-            formData.append("id", tripId);
+            formData.append("trip_id", tripId);
             formData.append("image", image);
             formData.append("filename", image.name);
             formData.append("mime_type", image.type);
@@ -68,6 +69,7 @@ export default function AddTrip({
         if (response.ok) {
             const trip = await response.json();
             await addTripImage(trip.id);
+            console.log("addTripImage:", trip.id);
             openPopup();
         }
 
@@ -77,19 +79,33 @@ export default function AddTrip({
     const openPopup = async () => {
         const popup = document.getElementById("categoryPopup");
         const popupBg = document.getElementById("categoryPopup-bg");
+        const isCurrentlyHidden = popup?.classList.contains("hidden");
+        const close_button = document.getElementById("close-button");
         if (popup) {
             popup.classList.toggle("hidden");
             popupBg?.classList.toggle("hidden");
+            close_button?.classList.toggle("hidden");
+            document.body.style.overflow = isCurrentlyHidden ? 'hidden' : 'auto';
+
         }
     }
 
+
     return (
         <div>
-            <div id="categoryPopup-bg" className="w-screen h-screen hidden bg-black/50 fixed top-0 left-0  z-[10000]" onClick={openPopup}></div>
+            {/* <div id="categoryPopup-bg" className="w-screen h-screen hidden bg-black/50 fixed top-0 left-0  z-[10000]" onClick={openPopup}></div> */}
+            <div id="categoryPopup-bg" className="backdrop-blur-sm w-screen h-screen hidden bg-black/50 fixed top-0 left-0  z-[10000]" onClick={openPopup}></div>
+
+            {/* <div id="close-button" className="hidden fixed top-3 right-5"><IoIosClose size={36}/></div> */}
             <div
                 id="categoryPopup"
-                className="flex flex-col items-center m-[auto]  justify-center hidden absolute bg-white shadow-lg rounded-lg p-4 w-[50vw] h-[70vh] z-[10001] overflow-y-auto top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 Overflow-y-auto "
+                className="flex flex-col items-center m-[auto]  justify-center hidden fixed bg-white shadow-lg rounded-lg p-4 w-[50vw] h-[70vh] z-[10001] overflow-y-auto top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 Overflow-y-auto "
             >
+                <div id="close-button"
+                    className="hidden  z-[10002] absolute top-4 right-4 text-2xl text-zinc-400 hover:text-blue-500 transition cursor-pointer"
+                    aria-label="Zamknij"
+                    onClick={openPopup}><IoIosClose size={36} /></div>
+
                 <Typography variant="h5" className="text-center font-semibold mb-4">
                     Create a new trip  </  Typography>
                 <form className="flex flex-col content-end flex-wrap mb-4 w-[50%] items-center" onSubmit={onSubmitForm}>

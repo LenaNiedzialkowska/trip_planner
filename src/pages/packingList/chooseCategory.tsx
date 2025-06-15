@@ -1,6 +1,7 @@
 import React, { Fragment, use, useState } from "react";
 import AddCategory from "./addCategory.tsx";
 import { Typography } from "@mui/material";
+import { IoIosClose } from "react-icons/io";
 
 interface Category {
     id: string;
@@ -28,21 +29,22 @@ export default function ChooseCategory({
     const [closePopup, setClosePopup] = useState(false);
     const additionaltCategories =
         [
-            "Plaża",
-            "Dziecko",
-            'Apteczka',
-            'Dokumenty',
-            'Jedzenie',
-            'Sport',
-            'Zima',
-            'Kemping',
-            'Biznes',
-            'Eleganckie',
-            "Zwierzęta",
-            "Nocleg",
+            "Beach",
+            "Child",
+            "FirstAid",
+            "Documents",
+            "Food",
+            "Sports",
+            "Winter",
+            "Camping",
+            "Business",
+            "Elegant",
+            "Pets",
+            "Accommodation",
             "Transport",
-            "Rozrywka",
+            "Entertainment",
         ];
+
 
     //     const additionaltCategories = [
     //   "Kosmetyki",
@@ -77,9 +79,12 @@ export default function ChooseCategory({
     const openPopup = async () => {
         const popup = document.getElementById("categoryPopup");
         const popupBg = document.getElementById("categoryPopup-bg");
+        const popupButton = document.getElementById("close-button-category");
         if (popup) {
             popup.classList.toggle("hidden");
             popupBg?.classList.toggle("hidden");
+            popupButton?.classList.toggle("hidden");
+            document.body.style.overflow = popup.classList.contains("hidden") ? 'auto' : 'hidden';
             await getCategories();
             console.log(categoriesList)
         }
@@ -125,9 +130,13 @@ export default function ChooseCategory({
         if (closePopup) {
             const popup = document.getElementById("categoryPopup");
             const popupBg = document.getElementById("categoryPopup-bg");
+            const popupButton = document.getElementById("close-button-category");
+
             if (popup) {
                 popup.classList.add("hidden");
                 popupBg?.classList.add("hidden");
+                popupButton?.classList.add("hidden");
+                document.body.style.overflow = 'auto'; // Reset body overflow
                 setClosePopup(false);
             }
         }
@@ -142,13 +151,17 @@ export default function ChooseCategory({
                     {"Add category"}
                 </button>
             </div>
-            <div id="categoryPopup-bg" className="w-screen h-screen hidden bg-black/50 fixed top-0 left-0  z-[10000]" onClick={openPopup}></div>
+            <div id="categoryPopup-bg" className="backdrop-blur-sm w-screen h-screen hidden bg-black/50 fixed top-0 left-0  z-[10000]" onClick={openPopup}></div>
             <div
                 id="categoryPopup"
                 className="flex flex-col justify-between hidden absolute bg-white shadow-lg rounded-lg p-4 w-[50vw] h-[70vh] z-[10001] overflow-y-auto top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 Overflow-y-auto"
             >
+                <div id="close-button-category"
+                    className="hidden  z-[10002] absolute top-4 right-4 text-2xl text-zinc-400 hover:text-blue-500 transition cursor-pointer"
+                    aria-label="Zamknij"
+                    onClick={openPopup}><IoIosClose size={36} /></div>
 
-                <h2 className="text-lg font-semibold mb-2">Choose Category</h2>
+                <h2 className="text-xl font-semibold mb-2 text-center">Choose Category</h2>
 
                 {/* <ul className="mt-4">
                         {categoriesList.map((category) => (
@@ -192,3 +205,4 @@ export default function ChooseCategory({
         // </div>
     );
 }
+

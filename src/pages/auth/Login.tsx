@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Icon } from 'react-icons-kit';
+import { eyeOff } from 'react-icons-kit/feather/eyeOff';
+import { eye } from 'react-icons-kit/feather/eye'
 
 interface User {
     userId: string;
@@ -8,7 +11,7 @@ interface User {
     email: string;
 }
 
-interface Props{
+interface Props {
     setUserID: React.Dispatch<React.SetStateAction<string | null>>
 }
 
@@ -17,6 +20,18 @@ const Login = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const navigate = useNavigate();
+    const [type, setType] = useState('password');
+    const [icon, setIcon] = useState(eyeOff);
+
+    const handleToggle = () => {
+        if (type === 'password') {
+            setIcon(eye);
+            setType('text')
+        } else {
+            setIcon(eyeOff)
+            setType('password')
+        }
+    }
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -35,7 +50,7 @@ const Login = () => {
                 localStorage.setItem('userID', jsonData.token);
                 // setUserID(jsonData.userId.toString());
                 navigate(`/${jsonData.userId.toString()}`);
-            }else{
+            } else {
                 console.error('Nieprawidłowy email lub hasło');
                 alert('Nieprawidłowy email lub hasło');
             }
@@ -74,14 +89,20 @@ const Login = () => {
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-700">Hasło</label>
-                        <input
-                            type="password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            required
-                            className="w-full p-3 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            placeholder="Twoje hasło"
-                        />
+                        <div className='flex'>
+                            <input
+                                type={type}
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                required
+                                className="w-full p-3 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                placeholder="Twoje hasło"
+                                autoComplete="current-password"
+                            />
+                            <span className="flex justify-around items-center" onClick={handleToggle}>
+                                <Icon className="absolute mr-10" icon={icon} size={25} />
+                            </span>
+                        </div>
                     </div>
                     <button
                         type="submit"

@@ -52,7 +52,7 @@ export default function CategoryList({
   const [categories, setCategories] = React.useState<Category[]>([]);
   const [refreshFlag, setRefreshFlag] = React.useState<boolean>(false);
   const [packingId, setPackingId] = React.useState<number | null>(null);
-  const defaultCategories = ["Ubrania", "Kosmetyki", "Elektronika"];
+  const defaultCategories = ["Clothes", "Toiletries", "Electronics"];
   // const [selectedCategory, setSelectedCategory] =
   //   React.useState<string>("Ubrania");
   const handleToggle = (value: number) => () => {

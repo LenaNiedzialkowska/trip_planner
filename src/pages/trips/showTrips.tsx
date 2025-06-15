@@ -2,6 +2,9 @@ import { Box, Divider, Typography } from "@mui/material";
 import * as React from "react";
 import AddTrip from "./addTrip.tsx";
 import EditTrip from "./editTrip.tsx";
+import { FaMoon } from "react-icons/fa6";
+import Carousel from "./imgCarousel.tsx";
+import { calculateNumberOfNights } from "./dateUtils.ts";
 
 interface Trips {
   id: string;
@@ -75,29 +78,22 @@ export default function Trips({ selectedTrip, setSelectedTrip, numberOfNights, s
     }
   }, [trips]);
 
-
-  const calculateNumberOfNights = (startDate: Date, endDate: Date): number => {
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    const timeDiff = end.getTime() - start.getTime();
-    const daysDiff = timeDiff / (1000 * 3600 * 24);
-    return daysDiff;
-  }
-
   return (
     <div className="flex flex-col items-center h-full px-8 py-4 max-w-[960px] mx-auto">
       <Typography variant="h4" sx={{ mt: 10, mb: 2 }}>
         Trips
       </Typography>
 
-      {trips && trips.length === 0 && (
-        <><Typography variant="h5"> Nothing planned... yet!</Typography><Typography variant="h5">Every great story starts with a single step. Start your travel story now by creating a new trip!</Typography></>
+      <div className="text-center">
+        {trips && trips.length === 0 && (
+          <><Typography variant="h5"> Nothing planned... yet!</Typography><Typography variant="h5">Every great story starts with a single step. Start your travel story now by creating a new trip!</Typography></>
 
-      )}
-      {trips && trips.length > 0 && (
-        <><Typography variant="h5">Welcome back!</Typography><Typography variant="h5">These are your upcoming adventures. Why not plan something new?</Typography></>
+        )}
+        {trips && trips.length > 0 && (
+          <><Typography variant="h5">Welcome back!</Typography><Typography variant="h5">These are your upcoming adventures.</Typography></>
 
-      )}
+        )}
+      </div>
       <Divider sx={{ mt: 4 }} />
       <AddTrip setRefreshFlag={setRefreshFlag} user_id={user_id} />
       <Divider sx={{ mt: 2 }} />
@@ -105,16 +101,33 @@ export default function Trips({ selectedTrip, setSelectedTrip, numberOfNights, s
         return (
           <Box sx={{ display: "flex" }} key={trip.id}>
             <div className="flex flex-col my-4 w-[700px]  py-[1rem] px-[1.5rem] shadow-md hover:shadow-gray-400/80 ease-in-out transition duration-200 cursor-pointer rounded-lg">
+              <div className="flex justify-end">
+                <EditTrip
+                  setRefreshFlag={setRefreshFlag}
+                  user_id={user_id}
+                  trip_id={trip.id}
+                  name={trip.name}
+                  number_of_destinations={trip.number_of_destinations}
+                  start_date={trip.start_date}
+                  end_date={trip.end_date}
+                  number_of_nights={trip.number_of_nights}
+                  cost={trip.cost}
+                  tripImages={tripImages}
+                  setTripImages={setTripImages}
+                />
+              </div>
               <div
                 onClick={() => { setSelectedTrip(trip.id); setNumberOfNights(calculateNumberOfNights(trip.start_date, trip.end_date)); setTripStartDate(new Date(trip.start_date)); }}
                 key={trip.id}
-                >
-                <header>{trip.name}</header>
+              >
+                <Typography variant="h5" className="text-center">{trip.name}</Typography >
                 {/* <img alt="vacations" className="w-[700px] h-[300px]" src="https://encrypted-tbn2.gstatic.com/licensed-image?q=tbn:ANd9GcSaxhCejgMF1G8dnUqdRX2X9MflQbbBcO4ydLN2J7OCt07X3buX-ki-1ZUyQbvmIhSBEKKPIVR7UYq0VOQHQWTlmZ_QuWB_w-_1Fh_0cA"></img> */}
-                <h1> Start Date: {new Date(trip.start_date).toLocaleDateString()}</h1>
-                <h1> End Date: {new Date(trip.end_date).toLocaleDateString()}</h1>
-                <h1> Nights: {" "}{calculateNumberOfNights(trip.start_date, trip.end_date)} {" "}</h1>
-                {tripImages[trip.id]?.length > 0 && (
+                <Typography variant="h6" className="text-gray-600">{new Date(trip.start_date).toLocaleDateString()} - {new Date(trip.end_date).toLocaleDateString()}</Typography>
+                <div className="flex items-center gap-2 text-gray-600">
+                  <FaMoon />
+                  <Typography variant="h6"> {"  "}{calculateNumberOfNights(trip.start_date, trip.end_date)} {" nights"}</Typography>
+                </div>
+                {/* {tripImages[trip.id]?.length > 0 && (
                   <div className="flex flex-wrap gap-2 mt-2">
                     {tripImages[trip.id].map((url, idx) => (
                       <img
@@ -124,24 +137,14 @@ export default function Trips({ selectedTrip, setSelectedTrip, numberOfNights, s
                         className="w-[700px] h-[300px] object-cover rounded shadow"
                       />
                     ))}
+                    
                   </div>
-                )}
+                )} */}
+                <Carousel images={tripImages[trip.id] || []} />
 
 
               </div>
-              <EditTrip
-                setRefreshFlag={setRefreshFlag}
-                user_id={user_id}
-                trip_id={trip.id}
-                name={trip.name}
-                number_of_destinations={trip.number_of_destinations}
-                start_date={trip.start_date}
-                end_date={trip.end_date}
-                number_of_nights={trip.number_of_nights}
-                cost={trip.cost}
-                tripImages={tripImages}
-                setTripImages={setTripImages}
-              />
+
             </div>
             <Divider sx={{ mt: 2 }} />
           </Box>

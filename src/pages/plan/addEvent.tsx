@@ -1,53 +1,62 @@
-import React, { Fragment, useState } from "react";
+import React, { useState } from "react";
+import { IoMdAdd } from "react-icons/io";
 
 interface Props {
   setRefreshFlag: React.Dispatch<React.SetStateAction<boolean>>;
   trip_id: string | null;
 }
 
-export default function AddEvent({
-  setRefreshFlag,
-  trip_id,
-}: Props) {
+export default function AddEvent({ setRefreshFlag, trip_id }: Props) {
   const [newEventName, setNewEventName] = useState("");
 
-  const onSubmitForm = async (e) => {
+  const onSubmitForm = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!newEventName.trim()) return;
+
     try {
       const body = {
         name: newEventName,
-        trip_id: trip_id
+        trip_id: trip_id,
       };
+
       const response = await fetch(`http://localhost:5000/api/events/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
-      console.log(response);
-      setNewEventName("");
-      setRefreshFlag(true);
+
+      if (response.ok) {
+        setNewEventName("");
+        setRefreshFlag(true);
+      } else {
+        console.error("Error: Failed to create event");
+      }
     } catch (error) {
-      console.error(error.message);
+      console.error("Error:", error);
     }
   };
+
   return (
-    <Fragment>
-      <form className="flex justify-between mb-4" onSubmit={onSubmitForm}>
-        <div className="pl-2 border-2 border-grey rounded-lg shadow-md shadow-grey-500/50">
-        <input
-          type="text"
-          className="form-control outline-none focus:ring-0 border-none"
-          onChange={(e) => {setNewEventName(e.target.value);}}
-          placeholder="Add Event"
-        ></input>
-        <button
-          className="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded-lg transition-all duration-300 ease-in-out"
-          disabled={newEventName ? false : true}
-        >
-          {">"}
-        </button>
-        </div>
-      </form>
-    </Fragment>
+    <form onSubmit={onSubmitForm} className="flex items-center gap-2 mb-4 w-full">
+      <input
+        type="text"
+        value={newEventName}
+        onChange={(e) => setNewEventName(e.target.value)}
+        placeholder="Add new event..."
+        className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
+      />
+      <button
+        type="submit"
+        disabled={!newEventName.trim()}
+        className={`p-2 rounded-lg transition ${
+          newEventName.trim()
+            ? "bg-blue-500 text-white hover:bg-blue-600"
+            : "bg-gray-300 text-gray-500 cursor-not-allowed"
+        }`}
+        title="Add event"
+      >
+        <IoMdAdd size={24} />
+      </button>
+    </form>
   );
 }

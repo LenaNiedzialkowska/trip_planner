@@ -8,11 +8,12 @@ DROP TABLE IF EXISTS expenses_category;
 
 DROP TABLE IF EXISTS events;
 
+DROP TABLE IF EXISTS trip_images;
+
 DROP TABLE IF EXISTS trips;
 
 DROP TABLE IF EXISTS users;
 
-DROP TABLE IF EXISTS trip_images;
 
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
@@ -43,7 +44,8 @@ events (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(255),
     date DATE,
-    time TIME,
+    start_time TIME,
+    end_time TIME,
     description VARCHAR(255),
     cost FLOAT,
     trip_id UUID NOT NULL,
@@ -109,3 +111,7 @@ CREATE TABLE
 
 ALTER TABLE packing_items
 ADD CONSTRAINT unique_item_in_category UNIQUE (item_category_id, name);
+
+INSERT INTO users (username, email, password) 
+VALUES 
+    ('test', 'test@test.pl', crypt('test', gen_salt('bf')));

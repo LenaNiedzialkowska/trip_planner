@@ -37,12 +37,16 @@ body{
   padding: 10px;
   background-color:#42a5f5;
   border-radius: 15px;
-  color: black;
+  color: white;
   box-shadow: 1px 1px 3px rgb(201, 200, 200);
 }
 
 .fc-event:hover{
   background-color:#1976d2;
+}
+
+.fc .fc-day-today {
+  background-color: #b7d8e9 !important; /* lub inny kolor */
 }
 
 @keyframes App-logo-spin {

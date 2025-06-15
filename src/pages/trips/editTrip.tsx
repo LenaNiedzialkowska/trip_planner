@@ -1,12 +1,15 @@
 import { Typography } from "@mui/material";
 import dayjs, { Dayjs } from "dayjs";
-import React, { Fragment, useState } from "react";
+import React, { Fragment, useEffect, useState } from "react";
+import EditIcon from '@mui/icons-material/Edit';
+import { IoIosClose } from "react-icons/io";
 
 interface Props {
     setRefreshFlag: React.Dispatch<React.SetStateAction<boolean>>;
     user_id?: string;
-    tripImages: File[];
-    setTripImages: React.Dispatch<React.SetStateAction<File[]>>;
+    tripImages: { [tripId: string]: string[] };
+    setTripImages: React.Dispatch<React.SetStateAction<{ [tripId: string]: string[] }>>;
+
 }
 interface Trips {
     trip_id: string;
@@ -43,17 +46,22 @@ export default function EditTrip({
                 console.error("No image selected for upload.");
                 return;
             }
-            formData.append("id", tripId);
+            formData.append("trip_id", tripId);
             formData.append("image", image);
             formData.append("filename", image.name);
             formData.append("mime_type", image.type);
 
-            const response = await fetch(`http://localhost:5000/api/tripImages`, {
+            const response = await fetch(`http://localhost:5000/api/tripImages/`, {
                 method: "POST",
                 body: formData
             })
             const jsonData = await response.json();
-            setTripImages((prevImages) => [...prevImages, image]);
+            const newImageUrl = jsonData.url;
+            setTripImages(prev => ({
+                ...prev,
+                [trip_id]: [...(prev[trip_id] || []), newImageUrl]
+            }));
+
         } catch (error) {
             console.error("Error uploading image:", error);
         }
@@ -84,8 +92,8 @@ export default function EditTrip({
         }
         if (response.ok) {
             console.log("Edited trip")
-            const trip = await response.json();
-            await addTripImage(trip.id);
+            // const trip = await response.json();
+            addTripImage(trip_id);
         }
         openEditPopup();
 
@@ -96,19 +104,29 @@ export default function EditTrip({
     const openEditPopup = async () => {
         const popup = document.getElementById("categoryEditPopup");
         const popupBg = document.getElementById("categoryEditPopup-bg");
+        const isCurrentlyHidden = popup?.classList.contains("hidden");
+        const close_button = document.getElementById("categoryCloseButton");
         if (popup) {
             popup.classList.toggle("hidden");
             popupBg?.classList.toggle("hidden");
+            close_button?.classList.toggle("hidden");
+            document.body.style.overflow = isCurrentlyHidden ? 'hidden' : 'auto';
+
         }
     }
 
     return (
         <div>
-            <div id="categoryEditPopup-bg" className="w-screen h-screen hidden bg-black/50 fixed top-0 left-0  z-[10000]" onClick={openEditPopup}></div>
+            <div id="categoryEditPopup-bg" className="backdrop-blur-sm w-screen h-screen hidden bg-black/50 fixed top-0 left-0  z-[10000]" onClick={openEditPopup}></div>
             <div
                 id="categoryEditPopup"
-                className="flex flex-col items-center m-[auto]  justify-center hidden absolute bg-white shadow-lg rounded-lg p-4 w-[50vw] h-[70vh] z-[10001] overflow-y-auto top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 Overflow-y-auto "
+                className="flex flex-col items-center m-[auto] fixed justify-center hidden  bg-white shadow-lg rounded-lg p-4 w-[50vw] h-[70vh] z-[10001] overflow-y-auto top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 overflow-y-auto "
             >
+                <div id="categoryCloseButton"
+                    className="hidden  z-[10002] absolute top-4 right-4 text-2xl text-zinc-400 hover:text-blue-500 transition"
+                    aria-label="Zamknij"
+                    onClick={openEditPopup}><IoIosClose size={36} /></div>
+
                 <Typography variant="h5" className="text-center font-semibold mb-4">
                     Edit {name} </  Typography>
                 <form className="flex flex-col content-end flex-wrap mb-4 w-[50%] items-center" onSubmit={onSubmitForm}>
@@ -186,11 +204,12 @@ export default function EditTrip({
                 {/* <div className="pl-2 border-2 border-grey rounded-lg shadow-md shadow-grey-500/50"> */}
                 <button
                     type="button"
-                    className="bg-transparent hover:bg-blue-400 text-blue-400 font-semibold hover:text-white py-2 px-4 border border-blue-400 hover:border-transparent rounded-lg duration-300 ease-in-out"
+                    className="bg-transparent  text-blue-400 font-semibold hover:text-blue-600 hover:border-transparent rounded-lg duration-300 ease-in-out"
                     //   disabled={newTripName ? false : true}
                     onClick={(e) => { openEditPopup(); e.stopPropagation(); }}
                 >
-                    {"Edit"}
+                    <EditIcon />
+                    {/* {"Edit"} */}
                 </button>
                 {/* </div> */}
             </Fragment>
